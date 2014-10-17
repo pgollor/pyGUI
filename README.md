@@ -1,7 +1,7 @@
 pyGUI
 =====
 
-python modular GUI based on PyQt4
+python3 modular GUI based on PyQt4
 
 Beschreibung
 ============
