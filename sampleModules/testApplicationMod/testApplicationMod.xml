@@ -1,0 +1,13 @@
+<?xml version="1.0" ?><module>
+	<main>
+		<displayname>testApplication</displayname>
+	</main>
+	
+	<default_settings>
+		<label name="label" text="default text from xml"/>
+	</default_settings>
+	
+	<settings>
+		<label name="label" text="default text from xml"/>
+	</settings>
+</module>

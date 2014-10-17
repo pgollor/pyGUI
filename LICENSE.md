@@ -1,11 +1,3 @@
-pyGUI
-=====
-
-python modular GUI based on PyQt4
-
-License
-=======
-
 Dieses Projekt ist lizensiert als Inhalt der
 Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 3.0 Unported-Lizenz.<br>
 Um eine Kopie der Lizenz zu sehen, besuchen Sie http://creativecommons.org/licenses/by-sa/3.0/.<br>
