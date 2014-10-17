@@ -3,6 +3,17 @@ pyGUI
 
 python modular GUI based on PyQt4
 
+Beschreibung
+============
+
+Die GUI stellt ein Gerüst für jegliche Art von Modulen bereit. Die Grundidee war, dass man mit einfachen Mitteln ein Modul erstellen kann, das irgendwelche Aufgaben übernimmt ohne jedes Mal mittels Qt eine Benutzeroberfläche erstellen zu müssen. Außerdem können die einzelnen Module über deine Schnittstelle untereinander kommunizieren.
+Darüber hinaus sind in pyGUI einige Funktionen implementiert, auf die jedes einzelne Modul zugreifen kann, oder Information für jedes einzelne Modul bereit stellen. Z.B. können Informationen von bestimmten Qt Elementen automatisch in einer XML Datei gespeichert werden und bei einem erneuten Start wieder geladen werden.
+
+In einem Modul kann jeder erdenklicher Python Code integriert werden. Dazu stehen drei Modultypen zur Verfügung. Application Module, Settings Module und hidden Module.
+Die einzelnen Aufgaben und Verwendungsmöglichkeiten der drei Modultypen können in der Doxygen Dokumentation nachgelesen werden.
+Die Dokumentation werde ich in kürze noch veröffentlichen. Diese kann aber auch ganz einfach mit der im Projekt integrierten doxyfile selber erstellt werden.
+
+
 License
 =======
 

@@ -16,7 +16,7 @@
 # @mainpage pyGUI
 # These project is a universal python3 GUI. You can add your own modules and use some global functions for your project.
 #  
-# @section Modules
+# @section Module
 # @subsection Allgemein
 # Es gibt eine abstrakte Oberklasse(abstractModuleClass) von dieser alle Module abgeleitet werden.
 # Drei verschiedene Modulklassen sind möglich:
