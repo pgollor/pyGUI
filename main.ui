@@ -6,197 +6,144 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>710</height>
+    <width>784</width>
+    <height>730</height>
    </rect>
   </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>800</width>
-    <height>710</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>800</width>
-    <height>710</height>
-   </size>
-  </property>
   <property name="windowTitle">
-   <string>Interferometer GUI</string>
+   <string>pyGUI</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabWidgetModules">
-    <property name="geometry">
-     <rect>
-      <x>5</x>
-      <y>5</y>
-      <width>790</width>
-      <height>525</height>
-     </rect>
+   <layout class="QGridLayout" name="gridLayout_3">
+    <property name="leftMargin">
+     <number>2</number>
     </property>
-    <property name="currentIndex">
-     <number>1</number>
+    <property name="topMargin">
+     <number>5</number>
     </property>
-    <widget class="QWidget" name="tabMain">
-     <attribute name="title">
-      <string>Main</string>
-     </attribute>
-     <widget class="QTreeWidget" name="treeWidgetModules">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>10</y>
-        <width>651</width>
-        <height>481</height>
-       </rect>
-      </property>
-      <attribute name="headerDefaultSectionSize">
-       <number>200</number>
-      </attribute>
-      <column>
-       <property name="text">
-        <string>type/name</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>dependencies</string>
-       </property>
-      </column>
-      <item>
-       <property name="text">
-        <string>hidden</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>settings</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>application</string>
-       </property>
-      </item>
-     </widget>
-     <widget class="QPushButton" name="pushButtonSelectAll">
-      <property name="geometry">
-       <rect>
-        <x>690</x>
-        <y>20</y>
-        <width>75</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>select all</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="pushButtonUnselectAll">
-      <property name="geometry">
-       <rect>
-        <x>690</x>
-        <y>50</y>
-        <width>75</width>
-        <height>23</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>unselect all</string>
-      </property>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="tabSettings">
-     <attribute name="title">
-      <string>Settings</string>
-     </attribute>
-     <widget class="QTabWidget" name="tabWidgetSettings">
-      <property name="geometry">
-       <rect>
-        <x>5</x>
-        <y>5</y>
-        <width>775</width>
-        <height>490</height>
-       </rect>
-      </property>
-      <property name="currentIndex">
-       <number>-1</number>
-      </property>
-     </widget>
-    </widget>
-   </widget>
-   <widget class="globalProgressBar" name="progressBarGlobal">
-    <property name="enabled">
-     <bool>false</bool>
+    <property name="rightMargin">
+     <number>2</number>
     </property>
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>540</y>
-      <width>280</width>
-      <height>20</height>
-     </rect>
+    <property name="bottomMargin">
+     <number>2</number>
     </property>
-    <property name="value">
+    <property name="horizontalSpacing">
      <number>0</number>
     </property>
-    <property name="textVisible">
-     <bool>true</bool>
+    <property name="verticalSpacing">
+     <number>2</number>
     </property>
-   </widget>
-   <widget class="QLabel" name="labelProgressBarGlobal">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>540</y>
-      <width>240</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QListWidget" name="listWidgetConsole">
-    <property name="geometry">
-     <rect>
-      <x>9</x>
-      <y>570</y>
-      <width>781</width>
-      <height>101</height>
-     </rect>
-    </property>
-   </widget>
+    <item row="0" column="1">
+     <widget class="QWidget" name="widgetProgressBar" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>22</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>22</height>
+       </size>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>5</number>
+       </property>
+       <property name="margin">
+        <number>1</number>
+       </property>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelProgressBarGlobal">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="globalProgressBar" name="progressBarGlobal">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubarMain">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>18</height>
+     <width>784</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMain">
     <property name="title">
      <string>Main</string>
     </property>
+    <addaction name="actionModules"/>
+    <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -217,11 +164,83 @@
     <addaction name="actionLicense"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuModuleSettings">
+    <property name="title">
+     <string>Module settings</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionToolBar"/>
+    <addaction name="actionLogger"/>
+   </widget>
    <addaction name="menuMain"/>
+   <addaction name="menuModuleSettings"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuSettings"/>
    <addaction name="menuQ"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="menuToolBar" name="toolBar">
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>64</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>Module Bar</string>
+   </property>
+   <property name="movable">
+    <bool>true</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftToolBarArea|Qt::RightToolBarArea|Qt::TopToolBarArea</set>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QtLoggerDockWidget" name="dockWidgetLogger">
+   <property name="minimumSize">
+    <size>
+     <width>95</width>
+     <height>100</height>
+    </size>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetVerticalTitleBar</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetLoggerContents">
+    <layout class="QGridLayout" name="gridLayout">
+     <property name="margin">
+      <number>0</number>
+     </property>
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QtLoggerListWidget" name="listWidgetConsole"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
   <action name="actionClose">
    <property name="text">
     <string>Close</string>
@@ -271,12 +290,55 @@
     <string>License</string>
    </property>
   </action>
+  <action name="actionModules">
+   <property name="text">
+    <string>Modules</string>
+   </property>
+  </action>
+  <action name="actionLogger">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Logging Window</string>
+   </property>
+  </action>
+  <action name="actionToolBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Module Bar</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>globalProgressBar</class>
    <extends>QProgressBar</extends>
    <header location="global">globalProgressBar.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QtLoggerListWidget</class>
+   <extends>QListWidget</extends>
+   <header location="global">guiLogger.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QtLoggerDockWidget</class>
+   <extends>QDockWidget</extends>
+   <header location="global">guiLogger.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>menuToolBar</class>
+   <extends>QToolBar</extends>
+   <header location="global">menu.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -294,6 +356,38 @@
     <hint type="destinationlabel">
      <x>399</x>
      <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionToolBar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>toolBar</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>391</x>
+     <y>50</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLogger</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockWidgetLogger</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>391</x>
+     <y>679</y>
     </hint>
    </hints>
   </connection>

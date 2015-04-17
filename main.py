@@ -16,7 +16,7 @@
 # @mainpage pyGUI
 # These project is a universal python3 GUI. You can add your own modules and use some global functions for your project.
 #  
-# @section Module
+# @section Modules
 # @subsection Allgemein
 # Es gibt eine abstrakte Oberklasse(abstractModuleClass) von dieser alle Module abgeleitet werden.
 # Drei verschiedene Modulklassen sind möglich:
@@ -83,10 +83,17 @@
 # 
 
 
-import sys
+import sys, os, logging
 from PyQt4 import QtGui
 from mainWindow import mainWindow
-from functions.delete import delete
+from functions.guiLogger import QtLogger
+
+# add dlls folder to environment
+dll_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dlls")
+global_path = os.environ.get('PATH', '')
+if dll_path not in global_path:
+	os.environ['PATH'] = os.pathsep.join((dll_path, global_path))
+# end if
 
 
 DEBUG = True
@@ -95,6 +102,10 @@ DEBUG = True
 ## @brief main function
 # create main window
 if __name__ == '__main__':
+	## set basic logging settings add own logger stream
+	# Set loglevel not to debug, because qt create much debug outputs. 
+	logging.basicConfig(level=logging.WARNING, format='%(asctime)-9s %(name)s [%(levelname)s]: %(message)s', datefmt='%H:%M:%S', handlers = [QtLogger()])
+
 	app = QtGui.QApplication(sys.argv)
 	
 	if (DEBUG == True):
@@ -112,19 +123,23 @@ if __name__ == '__main__':
 			w.show()
 		except Exception as e:
 			message = "unresolved exception in main.py: "
+
 			if (len(e.args) > 0):
 				message += str(e.args)
 			# end if
+
 			print(message)
 			sys.exit(0)
 		# end try
 	# end if
 	
+	#app.setQuitOnLastWindowClosed(True)
 	ret = app.exec_()
 	
 	# delete all objects
 	del(w)
 	del(app)
 
+	os._exit(0) # kill abrupt
 	sys.exit(ret)
 # end if

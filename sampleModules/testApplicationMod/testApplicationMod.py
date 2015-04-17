@@ -28,16 +28,22 @@
 # 	initGui(self)
 # 	onClose(self)
 # 	onActive(self)
+# 	onInactive(self)
 # 
-# - You can load other module handles by _getModuleArray()
-# - You can get other files by getIncludes()
-# - You can get global progress bar by _getProgressBar()
+# - You can load other module handles by self._getModuleArray()
+# - You can get other files by self.getIncludes()
+# - You can get global progress bar by self.p_progressBar
+# - You can get values from GUI elements. The GUI elements have to be located in xml file. self._getSettings([name])
 #
 # If you need other modules you have to add this module to a global variable as list like:
 # dependencies = ["testSettingMod"]
+#
+# Module icon:
+# specify the icon for menu button by using the following line in initGui function:
+# self.getMenuButton().setIcon(QIcon(self.getModulePath(True) + '/joystick8.svg'))
+# Or you can add <icon>relative path</icon> to the main node from modulename.xml
 # </pre>
 
-from PyQt4.QtCore import SIGNAL
 from abstractModuleClass import applicationModuleClass
 
 
@@ -52,6 +58,11 @@ class module(applicationModuleClass):
 	# end __init__
 
 	def __onPushButton(self):
+		self._p_logger.debug('debug test')
+		self._p_logger.info('info test')
+		self._p_logger.warning('warning test')
+		self._p_logger.error('error test')
+		self._p_logger.critical('critial test')
 		self.label.setText("push button were pressed")
 	# end __onPushButton
 
@@ -61,11 +72,13 @@ class module(applicationModuleClass):
 	# ---------- overrided functions ----------
 
 	def initModule(self):
-		pass
+		applicationModuleClass.initModule(self)
 	#end _initModule
 
 	def initGUI(self):
-		self.connect(self.pushButton, SIGNAL("clicked()"), self.__onPushButton)
+		self.pushButton.clicked.connect(self.__onPushButton)
+		
+		applicationModuleClass.initGUI(self)
 	# end _initGUI
 
 	# ---------- overrided functions ----------

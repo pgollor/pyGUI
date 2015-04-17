@@ -16,7 +16,10 @@
 # @brief Main window from Qt GUI and global module handler
 
 
-import os, sys
+import os, sys, logging
+from abstractModuleClass import abstractModuleClass
+from functools import partial
+from functions.mainMdiArea import mainMdiArea
 
 # add sub dirs do path
 curPath = os.path.abspath(os.curdir)
@@ -24,23 +27,24 @@ sys.path.append(curPath + '/functions/')
 
 
 from PyQt4 import uic
-from PyQt4.QtCore import SIGNAL, SLOT, Qt, QPoint
-from PyQt4.QtGui import QMainWindow, QTreeWidgetItem, QMenu, QApplication,\
-	QDialog, QAction
+from PyQt4.Qt import QRect
+from PyQt4.QtCore import SIGNAL, Qt, pyqtSlot, QPoint, QLocale
+from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QWidget
 import imp, re
 import xml.dom.minidom as dom
-from xmlHelper import readXMLNodes, getXMLNodeByAttributeValue, str2bool
-from delete import delete
-from progressBarThread import progressBarThread
+from functions.xmlHelper import readXMLNodes, getXMLNodeByAttributeValue, str2bool
+from functions.delete import delete
+from functions.progressBarThread import progressBarThread
+from functions.guiLogger import QtLogger
 
-# import logger classes
-import guiLogger.server as logServer
-import guiLogger.client as logClient
+# This is a special value defined in Qt4 but does not seem to be exported
+# by PyQt4
+QWIDGETSIZE_MAX = ((1 << 24) - 1)
+
 
 
 ## @brief main gui class
 class mainWindow(QMainWindow):
-
 	# ---------- Private ----------
 	
 	## @brief init class function
@@ -59,15 +63,13 @@ class mainWindow(QMainWindow):
 
 		#self.setupUi(self) # debug
 		uic.loadUi("./main.ui", self)
+		
+		# init QtLogger
+		QtLogger.printObj = self.listWidgetConsole
 
-		# init logger server
-		self.__p_loggerThread = logServer.loggingThread(self)
-		self.connect(self.__p_loggerThread, SIGNAL("logReceived(PyQt_PyObject)"), self.__onLogReceived, Qt.QueuedConnection)
-		self.__p_loggerThread.start()
-
-		# init logger client
-		self.__p_loggerClient = logClient.clientLogger("mainWindow")
-		self.__p_logger = self.__p_loggerClient.getLogger()
+		# init logger
+		self.__p_logger = logging.getLogger("mainWindow")
+		self.__p_logger.setLevel(logging.DEBUG) # set log level to debug for main window
 		
 		# set parameters for global progress bar
 		self.progressBarGlobal.setLabel(self.labelProgressBarGlobal)
@@ -77,6 +79,29 @@ class mainWindow(QMainWindow):
 		self.__p_progressBarThread = progressBarThread(self)
 		self.connect(self.__p_progressBarThread, SIGNAL('sigProgressBarUpdate(PyQt_PyObject)'), self.__onProgressBarUpdate)
 		self.__p_progressBarThread.start()
+		
+		# about
+		self.__p_about = QDialog(self)
+		uic.loadUi("./about.ui", self.__p_about)
+		self.actionAbout.triggered.connect(self.__p_about.exec)
+
+		# license
+		self.__p_license = QDialog(self)
+		uic.loadUi("./license.ui", self.__p_license)
+		self.actionLicense.triggered.connect(self.__p_license.exec)
+		
+		# setlect module dialog
+		self.__p_selectModule = QDialog(self)
+		uic.loadUi('./selectModule.ui', self.__p_selectModule)
+		self.actionModules.triggered.connect(self.__p_selectModule.exec)
+		
+		# add mdiArea
+		self.setCentralWidget(self.centralwidget)
+		self.mdiAreaMain = mainMdiArea(self.centralwidget)
+		self.centralwidget.layout().addWidget(self.mdiAreaMain, 0, 0)
+		self.centralwidget.layout().addWidget(self.widgetProgressBar, 1, 0)
+
+		self.toolBar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 	# end __init__
 
 	## @brief del function
@@ -84,21 +109,8 @@ class mainWindow(QMainWindow):
 	#
 	# delete all member variables and threads
 	def __del__(self):
-		if (self.__p_loggerClient != False):
-			delete(self.__p_loggerClient)
-			self.__p_loggerClient = False
-		# end if
-		
-		# delete thread if exist
-		if (self.__p_loggerThread != False):
-			self.__p_loggerThread.stop()
-			self.__p_loggerThread.wait(500)
-			if (not self.__p_loggerThread.isFinished()):
-				raise Exception("logger server thread not closed")
-			# end if
-			del(self.__p_loggerThread)
-			self.__p_loggerThread = False
-		# end if
+		# delete list item pointer
+		QtLogger.printObj = False
 		
 		# del progressBar
 		if (self.__p_progressBarThread != False):
@@ -122,19 +134,21 @@ class mainWindow(QMainWindow):
 		self.__v_modulePath = "modules/"
 		
 		## path for GUI xml files
-		self.__v_settingsFilePath = "./"
+		self.__v_settingsFilePath = os.path.abspath(os.curdir) + '/'
 		
 		## filename from main settings xml file
 		self.__v_settingsFileName = "main.xml"
 		
 		## filename from used modules xml file
-		self.__v_moduleSettingsFileName = 'modules.xml'
-		
-		## modules list
-		self.__l_modules = list()
-		
+		self.__v_userSettingsFileName = 'userSettings.xml'
+
 		## current module object
-		self.__p_currentModule = False
+		self.__p_currentModule = None
+		
+		## current tab index
+		self.__v_currentTabIndex = -1
+		
+		self.__s_currentName = ""
 		
 		## about dialog
 		self.__p_about = False
@@ -142,14 +156,14 @@ class mainWindow(QMainWindow):
 		## license dialog
 		self.__p_license = False
 		
+		## select module dialog
+		self.__p_selectModule = False
+		
 		## main settings dom object
 		self.__p_settingsHandle = False
 		
-		## list of unused modules
-		self.__p_usedModulesHandle = False
-		
-		## main GUI logger client object
-		self.__p_loggerClient = False
+		## user settings dom object
+		self.__p_userSettingsHandle = False
 		
 		## main gui logger object
 		self.__p_logger = False
@@ -157,14 +171,19 @@ class mainWindow(QMainWindow):
 		## logger server object thread
 		self.__p_loggerThread = False
 		
-		## current tab/module
-		self.__l_currentTab = {"parent": False, "index": -1}
+		## bottom layout in menu bar
+		self.__p_bottomMenuLayout = False
 		
 		## list of used modules
 		self.__l_usedModules = []
 		
 		## progressbar object thread
 		self.__p_progressBarThread = False
+		
+		##
+		self.__v_lastModule = ''
+		
+		self.__p_openSetttingWidget = False
 	# end __initVars
 	
 	## @brief init function
@@ -173,57 +192,48 @@ class mainWindow(QMainWindow):
 	# This init function load the modules an initialize the main gui. 
 	def init(self):		
 		self.__p_logger.debug("try load main window settings")
+		
+		# load settings
 		self.__loadSettings()
 		
-		# load used modules
-		self.__loadUsedModules()
+		# load user settings
+		self.__loadUserSettings()
 
 		self.__p_logger.debug("try load modules...")
-		self.__readModules()
+		self.__loadModules()
 		self.__p_logger.debug("load modules finished")
-		
+	
 		# expend all trees
-		for i in range(self.treeWidgetModules.topLevelItemCount()):
-			item = self.treeWidgetModules.topLevelItem(i)
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
 			item.setExpanded(True)
 		# end for
-		
-		# set current tab
-		if (self.__l_currentTab["parent"] != False and self.__l_currentTab["index"] > -1):
-			# visible settings tab if current tab is an settings tab
-			if (self.__l_currentTab["parent"] == self.tabWidgetSettings):
-				self.tabWidgetModules.setCurrentIndex(1)
-
-			# set tab as current tab
-			self.__l_currentTab["parent"].setCurrentIndex(self.__l_currentTab["index"])
-
-			self.__onChangeModule(-1)
-		# end if
 
 		# init gui
-		self.connect(self.actionSettingsLoad, SIGNAL("triggered()"), self.__onSettingsLoad)
-		self.connect(self.actionSettingsDefault, SIGNAL("triggered()"), self.__onSettingsDefault)
-		self.connect(self.actionSettingsSave, SIGNAL("triggered()"), self.__onSettingsSave)
-		self.connect(self.actionSettingsSaveAll, SIGNAL("triggered()"), self.__onSettingsSaveAll)
-
-		self.connect(self.tabWidgetModules, SIGNAL("currentChanged(int)"), self.__onChangeModule)
-		self.connect(self.tabWidgetSettings, SIGNAL("currentChanged(int)"), self.__onChangeModule)
+		self.actionSettingsLoad.triggered.connect(self.__onSettingsLoad)
+		self.actionSettingsDefault.triggered.connect(self.__onSettingsDefault)
+		self.actionSettingsSave.triggered.connect(self.__onSettingsSave)
+		self.actionSettingsSaveAll.triggered.connect(self.__onSettingsSaveAll)
+		
+		# signals for action logger and dockWidgetLogger
+		self.dockWidgetLogger.visibilityChanged[bool].connect(self.__onDockWidgetLoggerVisibilityChanged)
 		
 		# connect signals from main tab
-		self.connect(self.pushButtonSelectAll, SIGNAL("clicked()"), self.__selectAll)
-		self.connect(self.pushButtonUnselectAll, SIGNAL("clicked()"), self.__unselectAll)
-		self.connect(self.treeWidgetModules, SIGNAL("itemChanged(QTreeWidgetItem*, int)"), self.__onTreeWidgetChanged)
-
-		# about
-		self.__p_about = QDialog(self)
-		uic.loadUi("./about.ui", self.__p_about)
-		self.connect(self.actionAbout, SIGNAL("triggered()"), self.__p_about, SLOT("exec()"))
-
-		# license
-		self.__p_license = QDialog(self)
-		uic.loadUi("./license.ui", self.__p_license)
-		self.connect(self.actionLicense, SIGNAL("triggered()"), self.__p_license, SLOT("exec()"))
+		self.__p_selectModule.pushButtonSelectAll.clicked.connect(self.__selectAll)
+		self.__p_selectModule.pushButtonUnselectAll.clicked.connect(self.__unselectAll)
+		self.__p_selectModule.treeWidgetModules.itemChanged[QTreeWidgetItem, int].connect(self.__onTreeWidgetChanged)
+		
+		# connect signals from mdi area
+		#self.mdiAreaMain.dropModule.connect(self.__onDropModuleInMdiArea)
+		self.mdiAreaMain.subWindowActivated.connect(self.__onModuleActivated)
+		self.mdiAreaMain.dockOut.connect(self.__onDockOut)
 	# end init
+
+	
+	@pyqtSlot(bool)
+	def __onDockWidgetLoggerVisibilityChanged(self, visible):
+		self.actionLogger.setChecked(visible)
+	# end __onDockWidgetLoggerVisibilityChanged
 	
 	## @brief private slot for updating the progressbar
 	# @param self The object pointer.
@@ -263,20 +273,12 @@ class mainWindow(QMainWindow):
 			self.progressBarGlobal.setValue(value)
 		# end if
 	# end if
-	
-	## @brief private slot to show logging information
-	# @param self The object pointer.
-	# @param item listWidgetItem
-	def __onLogReceived(self, item):
-		self.listWidgetConsole.addItem(item)
-		self.listWidgetConsole.scrollToItem(item)
-	# end __onLogReceived
 
 	## @brief search for modules
 	# @param self The object pointer.
 	#
 	# Load all modules from self.__v_modulePath
-	def __readModules(self):
+	def __loadModules(self):
 		# init variables
 		loadOrder = ["hidden", "setting", "application"]
 
@@ -288,7 +290,7 @@ class mainWindow(QMainWindow):
 		moduleNames = []
 		
 		# clear gui list
-		self.treeWidgetModules.reset()
+		self.__p_selectModule.treeWidgetModules.reset()
 		itemList = {"hidden": [], "setting": [], "application": []}
 
 		# search for modules in module order
@@ -365,7 +367,7 @@ class mainWindow(QMainWindow):
 			# end for
 			
 			# add items to tree widget
-			item = self.treeWidgetModules.topLevelItem(index)
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(index)
 			item.addChildren(itemList[moduleClassType])
 			
 			index += 1
@@ -375,24 +377,31 @@ class mainWindow(QMainWindow):
 		for module in modules:
 			if (module["modHandle"] == False):
 				continue
-
+			# end if
+			#module["handle"] = module["modHandle"].module(None, module["name"])
 			module["handle"] = module["modHandle"].module(self, module["name"])
-			self.__p_logger.debug("load module " + module["name"])
+			
+			#self.__p_logger.debug("load module " + module["name"])
 		# end for
 
 		# open modules
-		self.__l_modules = dict()
+		abstractModuleClass.d_modules = dict()
+		abstractModuleClass.p_progressBar = self.progressBarGlobal
+		abstractModuleClass.p_progressBarThread = self.__p_progressBarThread
+		
 		for module in modules:
+			moduleName = module['name']
+			moduleHand = module['handle']
+			
 			try:
-				widget = False
-				self.__l_modules[module["name"]] = module
-				
 				# if module not used
 				if (module["modHandle"] == False):
 					continue
 				# end if
 				
-				moduleDir = modulesPath + module["suffix"] + module["name"]
+				abstractModuleClass.d_modules[moduleName] = module
+				
+				moduleDir = modulesPath + module["suffix"] + moduleName
 	
 				# find *.py files in the specific modules directory
 				os.chdir(moduleDir)
@@ -400,56 +409,113 @@ class mainWindow(QMainWindow):
 				includes = dict()
 				for filename in content:
 					if (os.path.isfile(moduleDir + "/" + filename)):
-						if (re.match(".*\.py$", filename) and not (module["name"] + ".py") == filename ):
+						if (re.match(".*\.py$", filename) and not (moduleName + ".py") == filename ):
 							name = filename[0:-3]
 							includes[name] = imp.load_source(name, moduleDir + "/" + filename)
 						# end if
 					# end if
 				# end for
 				os.chdir(currentDir)
-				
+
 				# set module settings
-				module["handle"].setModulePath(self.__v_modulePath + module["suffix"] + module["name"], os.path.abspath(os.curdir))
-				module["handle"].setModuleArray(self.__l_modules)
-				module["handle"].setIncludes(includes)
-				module["handle"].setProgressBar(self.progressBarGlobal)
-				module["handle"].setProgressBarThread(self.__p_progressBarThread)
+				moduleHand.setModulePath(self.__v_modulePath + module["suffix"] + module["name"], os.path.abspath(os.curdir))
+				moduleHand.setIncludes(includes)
 	
 				# check for module type
-				moduleClassType = module["handle"].getClassType()
-				if (moduleClassType == "application"):
-					widget = self.tabWidgetModules
-					# load [moduleName].ui
-					uic.loadUi(moduleDir + "/" + module["name"] + ".ui", module["handle"])
-				elif (moduleClassType == "setting"):
-					widget = self.tabWidgetSettings
-					# load [moduleName].ui
-					uic.loadUi(moduleDir + "/" + module["name"] + ".ui", module["handle"])
-				# end if
+				moduleClassType = moduleHand.getClassType()
 				
-				module["handle"].initPreSettings()
-	
-				if (moduleClassType != "hidden"):
-					module["handle"].loadSettings()
+				action = False
+
+				# module type specific init
+				if (moduleClassType == "application"):
+					# load [moduleName].ui
+					self.__p_logger.setLevel(logging.WARN)
+					uic.loadUi(moduleDir + "/" +moduleName + ".ui", moduleHand)
+					self.__p_logger.setLevel(logging.DEBUG)
+
+					# get menu button and connect
+					button = moduleHand.getMenuButton()
+					a = self.toolBar.addWidget(button)
+					moduleHand.setMenuAction(a)
+					
+					# connect signal from application menu button
+					button.clicked.connect(self.__onModuleShow) # clicked[Widget] wird nicht benoetigt, da dies in pyqtSlot entahlten sind
+					button.doubleClicked.connect(self.__onModuleShowMaximized)
+				elif (moduleClassType == "setting"):
+					# load [moduleName].ui
+					
+					self.__p_logger.setLevel(logging.WARN)
+					uic.loadUi(moduleDir + "/" + moduleName + ".ui", moduleHand)
+					self.__p_logger.setLevel(logging.DEBUG)
+
+					action = self.menuModuleSettings.addAction(moduleName)
+
+					# connect signals
+					#self.connect(action, SIGNAL('triggered()'), partial(self.__onSettingWidgetShow, module['handle']))
+					action.triggered.connect(partial(self.__onSettingWidgetShow, module['handle']))
+					self.connect(moduleHand, SIGNAL('onClose(PyQt_PyObject)'), self.__onSettingWidgetClose)
 				# end if
-	
-				# join in specific modules folder
+
+				iconPath = False	
+				if (moduleClassType != "hidden"):
+					moduleHand.initPreSettings()
+					moduleHand.loadUserSettings()
+					
+					iconPath = moduleHand.getIconPath()
+				# end if
+
+				# use module icons
+				# application: icon for menu button
+				# setting: icon for QAction
+				icon = None
+				if (iconPath != False):
+					icon = QIcon(iconPath)
+					if (moduleClassType == 'application'):
+						moduleHand.getMenuButton().setIcon(icon)
+					elif (moduleClassType == 'setting'):
+						action.setIcon(icon)
+					# end if
+				# end if
+
+				# join in specific modules folder for initModule
 				os.chdir(moduleDir)
-				module["handle"].initModule()
+				moduleHand.initModule()
 				os.chdir(currentDir)
 	
-				if (moduleClassType != "hidden"):
-					widget.addTab(module["handle"], module["handle"].getDisplayName())
+				# add module widget to GUI
+				if (moduleClassType == 'application'):
+					# init menu button
+					button = moduleHand.getMenuButton()
+					button.setText(moduleHand.getDisplayName())
+					
+					# add module to mdiArea an set visible = false
+					#self.widgetMain.layout().addWidget(moduleHand)
+					sw = self.mdiAreaMain.addSubWindow(moduleHand)
+					sw.setVisible(False)
+					
+					# set window options like title ect.
+					sw.setWindowTitle(moduleName)
+					sw.setWindowIcon(moduleHand.getMenuButton().icon())
+				
+					# connect on invisible signal
+					moduleHand.onInvisible[QWidget].connect(self.__onModuleInvisible)
+					
+					#moduleHand.setParent(self)
+				elif (moduleClassType == 'setting'):
+					moduleHand.setWindowTitle(moduleHand.getDisplayName())
+					moduleHand.setParent(self, Qt.Window)
 				else:
-					module["handle"].setParent(None)
+					moduleHand.setParent(None)
 				# end if
 			except Exception as e:
-				msg = "Fehler in Module " + module["name"]
+				msg = "Fehler in Module " + moduleName
 				self.__p_logger.critical(msg)
 				print(msg)
 				raise e
 			# end try
 		# end for
+		
+		#self.mdiAreaMain.cascadeSubWindows()
 
 		# init gui
 		for module in modules:
@@ -478,12 +544,148 @@ class mainWindow(QMainWindow):
 		
 		usedModules = self.__l_usedModules.copy()
 		# remove not known used modules
-		for module in usedModules:
-			if (module not in self.__l_modules):
-				self.__l_usedModules.remove(module)
+		for moduleName in usedModules:
+			if (moduleName not in abstractModuleClass.d_modules):
+				self.__l_usedModules.remove(moduleName)
+				
+				continue
+			# end if
+
+			if (moduleName == self.__v_lastModule):
+				mod = abstractModuleClass.getModuleByName(moduleName)
+				if (mod != False):
+					self.__onModuleShowMaximized(mod['handle'])
+					mod['handle'].getMenuButton().setChecked(True)
+				# end if
 			# end if
 		# end for
-	# end __readModules
+	# end __loadModules
+	
+	def __onSettingWidgetShow(self, module):
+		if (self.__p_openSetttingWidget != False):
+			self.__p_logger.error('There ist already a settings module opend.')
+			return
+		# end if
+
+		self.__p_openSetttingWidget = module
+		module.show()
+	# end __onSettingWidgetShow
+	
+	def __onSettingWidgetClose(self, module):
+		self.__p_openSetttingWidget = False
+	# end __onSettingWidgetClose
+	
+	## @brief if module docks out from mdiArea
+	@pyqtSlot(QWidget)
+	def __onDockOut(self, win):
+		# get module widget from subWindow 
+		module = win.widget()
+
+		# delete sub window
+		win.setWidget(None)
+		self.mdiAreaMain.removeSubWindow(win)
+		del(win)
+		
+		# set new parent for module
+		module.setParent(self, Qt.Window)
+		
+		# set icon and show module
+		module.setWindowIcon(module.getMenuButton().icon())
+		module.show()
+		module.move(self.geometry().center()-module.geometry().center())
+	# end __onDockOut
+	
+	## Qt slot: emit if module ignore close event and set visible = false
+	# @param module: module pointer
+	@pyqtSlot(QWidget)
+	def __onModuleInvisible(self, module):
+		if (len(self.mdiAreaMain.visibleSubWindowList()) == 0):
+			self.__p_currentModule = None
+		# end if
+	# end __onMpduleInvisible
+	
+	## @brief connect with subWindowActivated from mdiAreaMain
+	# @param widget: current widget in mdiArea
+	@pyqtSlot(QWidget)
+	def __onModuleActivated(self, widget):
+		# do nothing on mainWindow close
+		if (widget == None):
+			return
+		# end if
+		
+		self.__p_currentModule = widget.widget() 
+		self.__p_currentModule.onActive()
+		
+		# inactive other visible windows
+		subWindows = self.mdiAreaMain.visibleSubWindowList()
+		if (len(subWindows) > 1):
+			for subWin in subWindows:
+				if (subWin != widget):
+					subWin.widget().onInactive()
+				# end if
+				
+				#subWin.widget().getMenuButton().setChecked(True)
+			# end for
+		# end if
+	# end __onModuleActivated
+	
+	## @brief if a menu button was double clicked
+	# @param module: module pointer which module have to be displayed
+	# show only one module in full screen
+	@pyqtSlot(QWidget)
+	def __onModuleShowMaximized(self, module):
+		mdiWindow = module.parent()
+		
+		# set new module as current module
+		self.__p_currentModule = module
+
+		# maximize module
+		mdiWindow.showMaximized()
+	# end __onModuleShowMaximized
+	
+	## @brief if menu button was double clicked
+	# @param module: module pointer
+	# visible this module in mdiArea
+	@pyqtSlot(QWidget)
+	def __onModuleShow(self, module):
+		mdiWindow = module.parent()
+		
+		if (mdiWindow.metaObject().className() != "QMdiSubWindow"):
+			module.setParent(None)
+			mdiWindow = self.mdiAreaMain.addSubWindow(module)
+			module.setVisible(True)
+			mdiWindow.setWindowIcon(module.getMenuButton().icon())
+		# end if
+		
+		# Falls das Module schon sichtbar ist, wird es nur aktiviert.
+		if (mdiWindow.isVisible()):
+			if (not module.getMenuButton().isChecked() and self.mdiAreaMain.activeSubWindow() == mdiWindow):
+				mdiWindow.close()
+			else:
+				module.getMenuButton().setChecked(True)
+				self.mdiAreaMain.setActiveSubWindow(mdiWindow)
+			# end if
+		else:
+			#self.mdiAreaMain.cascadeSubWindows()
+			mdiWindow.setVisible(True)
+		# end if
+		
+		self.__p_currentModule = module
+	# end __onModuleShow
+	
+	"""
+	## @brief slot for dropModule signal from mdiArea
+	# @param name: string name of module
+	@pyqtSlot(str)
+	def __onDropModuleInMdiArea(self, name):
+		mod = abstractModuleClass.getModuleByName(name)
+
+		mod['handle'].parent().setVisible(True)
+		#self.mdiAreaMain.setActiveSubWindow(mod['handle'].parent())
+		#self.mdiAreaMain.tileSubWindows()
+		self.mdiAreaMain.cascadeSubWindows()
+	# end __onDropModuleInMdiArea
+	"""
 
 	## @brief load settings from main.xml
 	# @param self The object pointer.
@@ -496,51 +698,108 @@ class mainWindow(QMainWindow):
 
 		# settings
 		settings = self.__p_settingsHandle.getElementsByTagName("settings")[0]
+		
+		# mainwindow title
+		items = readXMLNodes(settings, 'displayName')
+		if (items != []):
+			self.setWindowTitle(items[0]['name'])
+		# end if
 
+	# end __loadSettings
+	
+	## @brief get user settings like used module list and gui position
+	# @param self The object pointer.
+	# 
+	# Load only the modules which were selected by the user
+	def __loadUserSettings(self):
+		# Falls die Datei nicht vorhanden ist, wird sie erstellt.
+		if (self.__v_userSettingsFileName in os.listdir(self.__v_settingsFilePath)):
+			self.__p_userSettingsHandle = dom.parse(self.__v_settingsFilePath + self.__v_userSettingsFileName)
+		else:
+			self.__p_userSettingsHandle = dom.parseString("<settings><usedModules></usedModules></settings>")
+		# end if
+		
+		# settings
+		settings = self.__p_userSettingsHandle.getElementsByTagName("settings")[0]
+		
 		# main window
 		x = 50
 		y = 50
+		w = self.width()
+		h = self.height() 
+		maximized = False
+
 		items = readXMLNodes(settings, "lastPosition")
-
-		if (len(items) > 0 and "x" in items[0] and "y" in items[0]):
-			x = int(items[0]["x"])
-			y = int(items[0]["y"])
+		if (len(items) > 0):
+			item = items[0]
+			if ("x" in item and "y" in item):
+				x = int(item["x"])
+				y = int(item["y"])
+			# end if
+			
+			if ('width' in item and 'height' in item):
+				w = int(item['width'])
+				h = int(item['height'])
+			# end if
+			
+			if ('max' in item):
+				maximized = str2bool(item['max'])
+			# end if
 		# end if
-
+		
 		# set geometry
-		geo = self.geometry()
-		geo.setX(x)
-		geo.setY(y)
-		self.setGeometry(geo)
-
+		if (maximized):
+			self.showMaximized()
+		else:
+			#geo = self.geometry()
+			geo = QRect()
+			geo.setX(x)
+			geo.setY(y)
+			geo.setHeight(h)
+			geo.setWidth(w)
+			self.setGeometry(geo)
+		# end if
+		
+		# restore states
+		#items = readXMLNodes(settings, "state")
+		#if (len(items) > 0 and 'bytes' in items[0]):
+		#	state = items[0]['bytes']
+		#	state = bytearray(state, 'utf-8')
+		#	self.restoreState(state)
+		# end if
+		
 		# checked
 		items = readXMLNodes(settings, "checked")
 		for item in items:
 			if (item["name"] == "saveonexit"):
 				self.actionSaveSettingsOnExit.setChecked(str2bool(item["checked"]))
+			# end if
+		# end for
+		
+		# read used modules
+		
+		#modulesHandle = self.__p_userSettingsHandle.getElementsByTagName("usedModules")[0]
+		modulesHandle = settings.getElementsByTagName("usedModules")[0]
+		modules = readXMLNodes(modulesHandle, "module")
+		for module in modules:
+			self.__l_usedModules.append(module["name"])
 		# end for
 
-		# last current tab
-		items = readXMLNodes(settings, "lastTab")
-		if (len(items) > 0 and "module" in items[0] and "settings" in items[0]):
-			moduleId = int(items[0]["module"])
-			settingsId = int(items[0]["settings"])
-
-			if (moduleId > -1):
-				self.__l_currentTab["parent"] = self.tabWidgetModules
-				self.__l_currentTab["index"] = moduleId
-			elif (settingsId > -1):
-				self.__l_currentTab["parent"] = self.tabWidgetSettings
-				self.__l_currentTab["index"] = settingsId
-			# end if
+		# last current modul
+		items = readXMLNodes(settings, "lastModule")
+		if (len(items) > 0 and "module" in items[0]):
+			moduleName = items[0]["module"]
+		
+			self.__v_lastModule = moduleName
 		# end if
-	# end __loadSettings
 
-	## @brief save settings to main.xml
+	# end __loadUserSettings
+	
+	## @brief save user settings
 	# @param self The object pointer.
-	def __saveSettings(self):
-		settings = self.__p_settingsHandle.getElementsByTagName("settings")[0]
-
+	def __saveUserSettings(self):
+		settings = self.__p_userSettingsHandle.getElementsByTagName("settings")[0]
+		
 		# gui position
 		geo = self.geometry()
 		node = settings.getElementsByTagName("lastPosition")
@@ -548,10 +807,32 @@ class mainWindow(QMainWindow):
 			node = node[0]
 			node.setAttribute("x", str(geo.x()))
 			node.setAttribute("y", str(geo.y()))
+			node.setAttribute("height", str(geo.height()))
+			node.setAttribute("width", str(geo.width()))
+			node.setAttribute('max', str(self.isMaximized()))
 		else:
 			node = self.__p_settingsHandle.createElement("lastPosition")
 			node.setAttribute("x", str(geo.x()))
 			node.setAttribute("y", str(geo.y()))
+			node.setAttribute("height", str(geo.height()))
+			node.setAttribute("width", str(geo.width()))
+			node.setAttribute('max', str(self.isMaximized()))
+			settings.appendChild(node)
+		# end if
+		
+		# gui state
+		node = settings.getElementsByTagName("state")
+		state = self.saveState()
+		import numpy as np
+		a = np.array(state.data())
+		state = str(a.tostring())
+		
+		if (len(node) > 0):
+			node = node[0]
+			node.setAttribute("bytes", state)
+		else:
+			node = self.__p_settingsHandle.createElement("state")
+			node.setAttribute("bytes", state)
 			settings.appendChild(node)
 		# end if
 
@@ -561,79 +842,44 @@ class mainWindow(QMainWindow):
 		if (node):
 			node.setAttribute("checked", checked)
 		else:
+			# only if userSettings.xml does not exists
+			
 			node = self.__p_settingsHandle.createElement("checked")
 			node.setAttribute("name", "saveonexit")
-			node.setAttribute("checked", checked)
+			node.setAttribute("checked", 'True')
+			self.actionSaveSettingsOnExit.setChecked(True)
 			settings.appendChild(node)
 		# end if
 
 		# current tab
-		settingsID = -1
-		moduleID = self.tabWidgetModules.currentIndex()
-		name = self.tabWidgetModules.tabText(moduleID)
-
-		if (name == "Settings"):
-			widget = self.tabWidgetSettings.currentWidget()
-			if (widget is not None):
-				name = widget.getName()
-				settingsID = self.tabWidgetSettings.currentIndex()
-				moduleID = -1
-		# end if
-
-		node = settings.getElementsByTagName("lastTab")
-		if (len(node) > 0):
-			node = node[0]
-			node.setAttribute("module", str(moduleID))
-			node.setAttribute("settings", str(settingsID))
-		else:
-			node = self.__p_settingsHandle.createElement("lastTab")
-			node.setAttribute("module", str(moduleID))
-			node.setAttribute("settings", str(settingsID))
-			settings.appendChild(node)
-		# end if
-
-		# save to xml
-		writer = open(self.__v_settingsFilePath + self.__v_settingsFileName, "w")
-		self.__p_settingsHandle.writexml(writer)
-		writer.close()
-	# end __saveSettings
-	
-	## @brief get used module list from modules.xml
-	# @param self The object pointer.
-	# 
-	# Load only the modules which were selected by the user
-	def __loadUsedModules(self):
-		# falls die datei nicht vorhandne ist wird sie erstellt
-		if (self.__v_moduleSettingsFileName in os.listdir(self.__v_settingsFilePath)):
-			self.__p_usedModulesHandle = dom.parse(self.__v_settingsFilePath + self.__v_moduleSettingsFileName)
-		else:
-			self.__p_usedModulesHandle = dom.parseString("<usedModules></usedModules>")
+		if (self.__p_currentModule != None):
+			node = settings.getElementsByTagName("lastModule")
+			if (len(node) > 0):
+				node = node[0]
+				node.setAttribute("module", self.__p_currentModule.getName())
+			else:
+				node = self.__p_settingsHandle.createElement("lastModule")
+				node.setAttribute("module", self.__p_currentModule.getName())
+				settings.appendChild(node)
+			# end if
 		# end if
 		
-		modulesHandle = self.__p_usedModulesHandle.getElementsByTagName("usedModules")[0]
-		
-		modules = readXMLNodes(modulesHandle, "module")
-		for module in modules:
-			self.__l_usedModules.append(module["name"])
-		# end for
-	# end __loadUsedModules
-	
-	## @brief save used modules into modules.xml
-	# @param self The object pointer.
-	def __saveUsedModules(self):
 		# modules
 		self.__l_usedModules = []
-		for i in range(self.treeWidgetModules.topLevelItemCount()):
-			item = self.treeWidgetModules.topLevelItem(i)
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
+
 			for c in range(item.childCount()):
 				child = item.child(c)
+
 				if (child.checkState(0) == Qt.Checked):
 					self.__l_usedModules.append(child.text(0))
 				# end if
 			# end for
 		# end for
 		
-		node = self.__p_usedModulesHandle.getElementsByTagName("usedModules")[0]
+		#node = self.__p_userSettingsHandle.getElementsByTagName("usedModules")[0]
+		node = settings.getElementsByTagName("usedModules")[0]
 		modules = readXMLNodes(node, "module")
 
 		for module in modules:
@@ -641,43 +887,55 @@ class mainWindow(QMainWindow):
 		# end for
 
 		for module in self.__l_usedModules:
-			childNode = self.__p_usedModulesHandle.createElement("module")
+			childNode = self.__p_userSettingsHandle.createElement("module")
 			childNode.setAttribute("name", module)
 			node.appendChild(childNode)
 		# end for
 		
 		# save to xml
-		writer = open(self.__v_settingsFilePath + self.__v_moduleSettingsFileName, "w")
-		self.__p_usedModulesHandle.writexml(writer)
+		writer = open(self.__v_settingsFilePath + self.__v_userSettingsFileName, "w")
+		self.__p_userSettingsHandle.writexml(writer)
 		writer.close()
-	# end __saveUsedModules
+	# end __saveUserSettings
 
 	## @brief private slot for main bar: settings -> load
 	# @param self The object pointer.
 	def __onSettingsLoad(self):
-		if (self.__p_currentModule and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.loadSettings()
+		if (self.__p_openSetttingWidget):
+			self.__p_openSetttingWidget.loadUserSettings()
+			return
+		# end if
+		
+		if (self.__p_currentModule != None and self.__p_currentModule.getClassType() != "hidden"):
+			self.__p_currentModule.loadUserSettings()
 		# end if
 	# end __onSettingsLoad
-
+	
 	## @brief private slot for menu bar: settings -> save
 	# @param self The object pointer.
 	def __onSettingsSave(self):
-		if (self.__p_currentModule and "getClassType" in dir(self.__p_currentModule) and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.saveSettings()
+		if (self.__p_openSetttingWidget):
+			self.__p_openSetttingWidget.saveUserSettings()
+			return
+		# end if
+		
+		if (self.__p_currentModule != None and "getClassType" in dir(self.__p_currentModule) and self.__p_currentModule.getClassType() != "hidden"):
+			self.__p_currentModule.saveUserSettings()
 		# end if
 	# end __onSettingsSave
 
 	## @brief private slot for menu bar: settings -> save all
 	# @param self The object pointer.
 	def __onSettingsSaveAll(self):
-		for name in self.__l_modules:
-			if (self.__l_modules[name]["modHandle"] == False):
+		modules = abstractModuleClass.d_modules
+		
+		for name in modules:
+			if (modules[name]["modHandle"] == False):
 				continue
 			# end if
 			
-			if (self.__l_modules[name]["handle"].getClassType() != "hidden"):
-				self.__l_modules[name]["handle"].saveSettings()
+			if (modules[name]["handle"].getClassType() != "hidden"):
+				modules[name]["handle"].saveUserSettings()
 			# end if
 		# end for
 	# def __onSettingsSaveAll
@@ -685,40 +943,23 @@ class mainWindow(QMainWindow):
 	## @brief private slot for menu bar: settings -> load default
 	# @param self The object pointer.
 	def __onSettingsDefault(self):
-		if (self.__p_currentModule and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.loadDefaultSettings()
-	# end __onSettingsDefault
-
-	## @brief private slot for change the current module
-	# @param self The object pointer.
-	# @param ID current tab index (default -1)
-	def __onChangeModule(self, ID):
-		ID = self.tabWidgetModules.currentIndex()
-		name = self.tabWidgetModules.tabText(ID)
-
-		if (name == "Settings"):
-			widget = self.tabWidgetSettings.currentWidget()
-			if (widget is None):
-				self.__p_currentModule = False
-				return
-			# end if
-			name = widget.getName()
-		else:
-			widget = self.tabWidgetModules.currentWidget()
+		if (self.__p_openSetttingWidget):
+			self.__p_openSetttingWidget.loadSettings()
+			return
 		# end if
-
-		self.__p_currentModule = widget
-
-		if (name != "Main"):
-			self.__p_currentModule.onActive()
-	# end __onChangeModule
+		
+		if (self.__p_currentModule != None and self.__p_currentModule.getClassType() != "hidden"):
+			self.__p_currentModule.loadSettings()
+		# end if
+	# end __onSettingsDefault
 	
 	## @brief private slot for push button select all
 	# @param self The object pointer.
+	@pyqtSlot()
 	def __selectAll(self):
 		self.__l_usedModules = []
-		for i in range(self.treeWidgetModules.topLevelItemCount()):
-			item = self.treeWidgetModules.topLevelItem(i)
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
 			for c in range(item.childCount()):
 				child = item.child(c)
 				child.setCheckState(0, Qt.Checked)
@@ -729,10 +970,11 @@ class mainWindow(QMainWindow):
 	
 	## @brief private slot for push button unselect all
 	# @param self The object pointer.
+	@pyqtSlot()
 	def __unselectAll(self):
 		self.__l_usedModules = []
-		for i in range(self.treeWidgetModules.topLevelItemCount()):
-			item = self.treeWidgetModules.topLevelItem(i)
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
 			for c in range(item.childCount()):
 				child = item.child(c)
 				child.setCheckState(0, Qt.Unchecked)
@@ -742,7 +984,8 @@ class mainWindow(QMainWindow):
 	
 	def __treeWidgetChild(self, childName, treeWidget = False):
 		if (treeWidget == False):
-			treeWidget = self.treeWidgetModules
+			treeWidget = self.__p_selectModule.treeWidgetModules
+		# end if
 		
 		for i in range(treeWidget.topLevelItemCount()):
 			item = treeWidget.topLevelItem(i)
@@ -758,7 +1001,8 @@ class mainWindow(QMainWindow):
 	# end __treeWidgetChild
 	
 	def __checkForDependencies(self, name):
-		module = self.__l_modules[name]
+		module = abstractModuleClass.d_modules[name]
+		#module = self.__l_modules[name]
 		for depModule in module["dependencies"]:
 			if (depModule not in self.__l_usedModules):
 				child = self.__treeWidgetChild(depModule)
@@ -775,8 +1019,11 @@ class mainWindow(QMainWindow):
 		return True
 	# end __checkForDependencies
 	
+	@pyqtSlot(QTreeWidgetItem, int)
 	def __onTreeWidgetChanged(self, item, column):
+		modules = abstractModuleClass.d_modules
 		name = item.text(column)
+
 		if (item.checkState(column) == Qt.Checked):
 			if (self.__checkForDependencies(name)):
 				if (name not in self.__l_usedModules):
@@ -788,8 +1035,8 @@ class mainWindow(QMainWindow):
 		else:
 			if (name in self.__l_usedModules):
 				# if another module depend this module ?
-				for modName in self.__l_modules:
-					if (modName in self.__l_usedModules and name in self.__l_modules[modName]["dependencies"]):
+				for modName in modules:
+					if (modName in self.__l_usedModules and name in modules[modName]["dependencies"]):
 						self.__l_usedModules.remove(modName)
 						item = self.__treeWidgetChild(modName)
 						item.setCheckState(column, Qt.Unchecked)
@@ -809,44 +1056,48 @@ class mainWindow(QMainWindow):
 	# 
 	# Save all settings before closing.
 	def closeEvent(self, event):
+		modules = abstractModuleClass.d_modules
+		
 		# pre close
-		for name in self.__l_modules:
-			if (self.__l_modules[name]["modHandle"] == False):
+		for name in modules:
+			if (modules[name]["modHandle"] == False):
 				continue
 			# end if
 			
-			self.__l_modules[name]["handle"].onPreClose()
+			modules[name]["handle"].onPreClose()
 		# end for
 		
-		# save main settings
-		self.__saveSettings()
-		
-		# save used modules
-		self.__saveUsedModules()
+		# save user settings
+		self.__saveUserSettings()
 
 		# save module settings
 		if (self.actionSaveSettingsOnExit.isChecked()):
 			self.__onSettingsSaveAll()
 		# end if
+		
+		# delete all plots
+		abstractModuleClass.deleteAllPlots()
 
 		# close all modules
-		for name in self.__l_modules:
-			if (self.__l_modules[name]["modHandle"] == False):
+		for name in modules:
+			if (modules[name]["modHandle"] == False):
 				continue
 			# end if
 
-			self.__l_modules[name]["handle"].onClose()
+			modules[name]["handle"].onClose()
 
-			for inc in self.__l_modules[name]["handle"].getIncludes():
+			for inc in modules[name]["handle"].getIncludes():
 				del(inc)
 			# end for
 
-			delete(self.__l_modules[name]["handle"])
-			delete(self.__l_modules[name]["modHandle"])
+			delete(modules[name]["handle"])
+			delete(modules[name]["modHandle"])
 		# end for
+		
+		del(modules)
+		del(abstractModuleClass.d_modules)
 
-		# accept close event (maybe not used???)
-		event.accept()
+		#QMainWindow.__del__(self)
 	# end closeEvent
 
 	## @brief public interface function to freeze the GUI
@@ -873,38 +1124,5 @@ class mainWindow(QMainWindow):
 		return self.listWidgetConsole
 	# end getOutptuWidget
 
-	
-	def __onConsoleClear(self):
-		self.listWidgetConsole.clear()
-	# end __onConsoleClear
-	
-	def __onConsoleCopy(self):
-		cb = QApplication.clipboard()
-		cb.clear(mode=cb.Clipboard )
-		cb.setText(self.listWidgetConsole.currentItem().text(), mode=cb.Clipboard)
-	# end __onConsoleCopy
-	
-	def __onConsoleEmpty(self):
-		self.listWidgetConsole.addItem('')
-	# end __onConsoleEmpty
-	
-	def contextMenuEvent(self, event):
-		pos = event.pos()
-		lw = self.listWidgetConsole
-		qm = self.menubarMain.height()
-		
-		if (pos.x() >= lw.pos().x() and pos.x() < lw.pos().x() + lw.width() and pos.y() >= lw.pos().y() + qm and pos.y() < lw.pos().y() + lw.height() + qm):
-			popup = QMenu(self)
-			popup.addAction('clear all', self.__onConsoleClear)
-			a = popup.addAction('copy line', self.__onConsoleCopy)
-			popup.addAction('insert empty line', self.__onConsoleEmpty)
-			if (self.listWidgetConsole.count() == 0):
-				a.setEnabled(False)
-			# end if
-			
-			pos = QPoint(pos.x() + self.x(), pos.y() + self.y() + qm)
-			popup.popup(pos)
-		# end if
-	# end contextMenuEvent
-
 #end class mainWindow
+

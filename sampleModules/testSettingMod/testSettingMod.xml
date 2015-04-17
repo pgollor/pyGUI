@@ -9,11 +9,4 @@
 		<radiobutton checked="True" name="radioButton_1"/>
 		<radiobutton checked="False" name="radioButton_2"/>
 	</default_settings>
-	
-	<settings>
-		<label name="labelFoo" text="push button were pressed"/>
-		<checkbox checked="True" name="checkBoxTest"/>
-		<radiobutton checked="True" name="radioButton_1"/>
-		<radiobutton checked="False" name="radioButton_2"/>
-	</settings>
 </module>

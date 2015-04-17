@@ -1,5 +1,6 @@
-## @file testProgressBar.py
-# 
+##
+# @file testApplicationMod.py
+#
 # @date 26.07.2013
 # @author Stanislav Tereschenko
 # @author Pascal Gollor (http://www.pgollor.de)
@@ -12,12 +13,14 @@
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 # 
-# @brief This is a demo module to demonstrate the global progressbar functionality. 
+# @brief This is a tiny demo module.
 
 
 from abstractModuleClass import applicationModuleClass
 
 
+##
+# @brief application module for PyGUI
 class module(applicationModuleClass):
 
 	# ---------- Private ----------
@@ -25,23 +28,10 @@ class module(applicationModuleClass):
 	def __init__(self, parent, name):
 		applicationModuleClass.__init__(self, parent, name)
 	# end __init__
-
-	def __onPushButtonInit(self):
-		self.p_progressBar.init(self, printModuleName = True)
-	# end __onPushButtonInit
 	
-	def __onPushButtonSet(self):
-		val = int(self.lineEditValue.text())
-		self.p_progressBar.setValue(val)
-	# end __onPushButtonSet
-	
-	def __onPushButtonClear(self):
-		self.p_progressBar.clear()
-	# end __onPushButtonClear
-	
-	def __onPushButtonDisable(self):
-		self.p_progressBar.disable()
-	# end __onPushButtonDisable
+	def __onPushButton(self):
+		print(self._getSettings())
+	# end if
 
 	# ---------- Private ----------
 
@@ -53,10 +43,7 @@ class module(applicationModuleClass):
 	#end _initModule
 
 	def initGUI(self):
-		self.pushButtonInit.clicked.connect(self.__onPushButtonInit)
-		self.pushButtonSet.clicked.connect(self.__onPushButtonSet)
-		self.pushButtonClear.clicked.connect(self.__onPushButtonClear)
-		self.pushButtonDisable.clicked.connect(self.__onPushButtonDisable)
+		self.pushButton.clicked.connect(self.__onPushButton)
 		
 		applicationModuleClass.initGUI(self)
 	# end _initGUI

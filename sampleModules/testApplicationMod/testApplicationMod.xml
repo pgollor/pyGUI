@@ -6,8 +6,4 @@
 	<default_settings>
 		<label name="label" text="default text from xml"/>
 	</default_settings>
-	
-	<settings>
-		<label name="label" text="default text from xml"/>
-	</settings>
 </module>

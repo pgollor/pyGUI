@@ -17,31 +17,43 @@ from PyQt4.QtGui import QProgressBar
 
 
 class globalProgressBar(QProgressBar):
-	__p_label = False
-	
 	def __init__(self, parent = False):
 		QProgressBar.__init__(self, parent)
+		
+		self.__p_label = False
 	# end __init__
 	
 	def setLabel(self, label):
 		self.__p_label = label
 	# end setLabel
 	
-	def init(self, module = False, value = 0, printModuleName = False):
-		self.setEnabled(True)
+	def init(self, module = False, value = 0, printModuleName = False, waitOnly = False):
+		if (waitOnly):
+			self.setMinimum(0)
+			self.setMaximum(0)
+			self.setTextVisible(False)
+		else:
+			self.setMinimum(0)
+			self.setMaximum(100)
+			self.setTextVisible(True)
+			self.setValue(value)
+		# end if
+		
 		self.setVisible(True)
-		self.setValue(value)
+		self.setEnabled(True)
 		
 		if (printModuleName):
 			self.__p_label.setText(module.getDisplayName())
 		else:
 			self.__p_label.setText("")
+		# end if
 	# end use
 	
 	def clear(self, delText = True):
 		self.setValue(0)
 		if (delText):
 			self.__p_label.setText("")
+		# end if
 	# end clear
 	
 	def setText(self, text):

@@ -14,8 +14,9 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
 
-from PyQt4.QtCore import SIGNAL, QRect, Qt
-from PyQt4.QtGui import QDialog, QDesktopWidget, QWidget, QMainWindow, QVBoxLayout
+from PyQt4.QtCore import SIGNAL, QRect, Qt, QPoint
+from PyQt4.QtGui import QDialog, QDesktopWidget, QWidget, QMainWindow, QVBoxLayout,\
+	QCheckBox
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -23,29 +24,26 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 
 
 class QWidgetSignals(QWidget):
-	__v_oldPos = False
+	
+	#onClose = pyqtSignal(name="onClose")
+	#onShow = pyqtSignal(name="onShow")
 	
 	def __init__(self, parent = False):
 		QWidget.__init__(self, parent)
 		
-		self._init()
-	# end __init__
-	
-	def _init(self):
-		# get primiry monitor resolution
+		# get primary monitor resolution
 		qdw = QDesktopWidget()
 		mainScreenSize = qdw.availableGeometry(qdw.primaryScreen())
-
+		
 		# get center of the monitor
 		center = mainScreenSize.center()
-
+		
 		# calculate width, height and x,y positions of the window
 		r_width = round(mainScreenSize.width() / 2)
 		r_height = round(mainScreenSize.height() / 2)
 		r_x = round(center.x() - r_width / 2)
 		r_y = round(center.y() - r_height / 2)
-		self.__v_oldPos = False
-
+		
 		# set default geometry of the window
 		rect = QRect()
 		rect.setX(r_x)
@@ -53,11 +51,7 @@ class QWidgetSignals(QWidget):
 		rect.setWidth(r_width)
 		rect.setHeight(r_height)
 		self.setGeometry(rect)
-	# end _init		
-	
-	def __del__(self):
-		self.__v_oldPos = False
-	# end __del__
+	# end __init__
 	
 	def closeEvent(self, event):
 		self._onCloseEvent()
@@ -72,31 +66,61 @@ class QWidgetSignals(QWidget):
 	# end showEvent
 	
 	def _onCloseEvent(self):
-		# save position
-		self.__v_oldPos = self.pos()
-		
 		# emit signal
 		self.emit(SIGNAL("onClose()"))
+		#self.onClose.emit()
 	# end _oncliseEvent
 	
 	def _onShowEvent(self):
-		# load position
-		if (self.__v_oldPos != False):
-			self.move(self.__v_oldPos)
-		# end if
-		
 		# emit signal	
 		self.emit(SIGNAL("onShow()"))
+		#self.onShow.emit()
 	# end _onShowEvent
 		
 # end class QWidgetSignals
+
+class externQWidget(QWidget):
+	def __init__(self, parent):
+		QWidget.__init__(self, parent)
+		
+		self.checkBoxExtern = QCheckBox('undock', self)
+		self.checkBoxExtern.setGeometry(5, 5, 70, 20)
+		self.checkBoxExtern.setChecked(False)
+
+		self.checkBoxExtern.toggled[bool].connect(self.onExtern)
+		
+		self.__v_pos = QPoint(100, 100)
+	# end __init__
+	
+	def closeEvent(self, event):
+		event.ignore()
+
+		self.checkBoxExtern.setChecked(False)
+		#self.__onExtern(False)
+
+		#QWidget.closeEvent(self, event)
+	# end closeEvent
+	
+	def onExtern(self, b):
+		if (b):
+			self.setWindowFlags(Qt.Dialog)
+			self.move(self.__v_pos)
+		else:
+			self.__v_pos = self.pos()
+			self.setWindowFlags(Qt.Widget)
+			self.move(0, 0)
+		# end if
+
+		self.show()
+	# end onExtern
+	
+# end class externQWidget
 
 
 class QMainWindowSignals(QMainWindow, QWidgetSignals):
 	def __init__(self, parent = None):
 		QMainWindow.__init__(self, parent)
 		super(QWidgetSignals, self).__init__(self)
-		self._init()
 	# end __init__
 	
 	def closeEvent(self, event):
@@ -114,19 +138,7 @@ class QMainWindowSignals(QMainWindow, QWidgetSignals):
 # end class QMainWindowSignals
 
 
-#class QDialogSignals(QDialog, QWidgetSignals):
-#	__v_oldPos = False
-#	
-#	def __init__(self, parent = None):
-#		QDialog.__init__(self, parent)
-#		QWidgetSignals.__init__(self, parent)
-#	# end __init__
-#	
-# end class QDialogSignals
-
-
 class QDialogSignals(QDialog):
-	__v_oldPos = False
 	
 	def __init__(self, parent = None):
 		QDialog.__init__(self, parent)
@@ -142,8 +154,7 @@ class QDialogSignals(QDialog):
 		r_height = round(mainScreenSize.height()/2)
 		r_x = round(center.x()-r_width/2)
 		r_y = round(center.y()-r_height/2)
-		self.__v_oldPos = False
-
+		
 		# set default geometry of the window
 		rect = QRect()
 		rect.setX(r_x)
@@ -153,16 +164,7 @@ class QDialogSignals(QDialog):
 		self.setGeometry(rect)
 	# end __init__
 	
-	def __del__(self):
-		self.__v_oldPos = False
-	# end __del__
-	
 	def showEvent(self, event):
-		# load position
-		if (self.__v_oldPos != False):
-			self.move(self.__v_oldPos)
-		# end if
-		
 		# emit signal	
 		self.emit(SIGNAL("onShow()"))
 		
@@ -171,9 +173,6 @@ class QDialogSignals(QDialog):
 	# end showEvent
 	
 	def closeEvent(self, event):
-		# save position
-		self.__v_oldPos = self.pos()
-		
 		# emit signal
 		self.emit(SIGNAL("onClose()"))
 		
@@ -196,18 +195,13 @@ class QDialogPlot(QDialogSignals):
 		layout = QVBoxLayout()
 		layout.addWidget(self.toolbar)
 		layout.addWidget(self.canvas)
-		#layout.addWidget(self.button)
 		self.setLayout(layout)
 	# end __init__
 	
-	#def plotFunction(self):
-	#	pass
-	# end plotFunction
-	
 	def primitivePlot(self, x,y=[]):
 		if (not self.isVisible()):
-			print("show")
 			self.show()
+		# end if
 		
 		# clear figure
 		self.figure.clear()

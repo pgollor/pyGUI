@@ -15,10 +15,7 @@
 # @brief This is a demo module to demonstrate the global plot handling.
 
 
-from PyQt4.QtCore import SIGNAL
 from abstractModuleClass import applicationModuleClass
-
-from delete import delete
 from customDialogs import QDialogPlot
 import numpy as np
 
@@ -90,20 +87,17 @@ class module(applicationModuleClass):
 	#end _initModule
 
 	def initGUI(self):
-		self.connect(self.pushButtonPlotSample1, SIGNAL("clicked()"), self.__onPlotSample1)
-		self.connect(self.pushButtonPlotSample2, SIGNAL("clicked()"), self.__onPlotSample2)
-		self.connect(self.pushButtonPlotSample3, SIGNAL("clicked()"), self.__onPlotSample3)
-		self.connect(self.pushButtonPlotSample4, SIGNAL("clicked()"), self.__onPlotSample4)
+		self.pushButtonPlotSample1.clicked.connect(self.__onPlotSample1)
+		self.pushButtonPlotSample2.clicked.connect(self.__onPlotSample2)
+		self.pushButtonPlotSample3.clicked.connect(self.__onPlotSample3)
+		self.pushButtonPlotSample4.clicked.connect(self.__onPlotSample4)
 		
 		self.__p_dialog = QDialogPlot(self._getParent())
 		#self.__p_dialog.setGeometry(100,100,100,100)
 	# end _initGUI
 	
 	def onClose(self):
-		if (self.__p_dialog != False):
-			delete(self.__p_dialog)
-			self.__p_dialog = False
-		# end if
+		self.__p_dialog = False
 	# end onClose
 
 	# ---------- overrided functions ----------

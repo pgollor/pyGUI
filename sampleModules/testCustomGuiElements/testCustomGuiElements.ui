@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>510</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="customIntegerLineEdit" name="lineEditInteger">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>20</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PushButton</string>
+   </property>
+  </widget>
+  <widget class="customFloatLineEdit" name="lineEditFloat">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="customStringLineEdit" name="lineEditNormal">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>80</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="customListLineEdit" name="lineEditList">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>110</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxTestCheck">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>160</y>
+     <width>71</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>CheckBox</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBoxTestGroup">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>150</y>
+     <width>120</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>GroupBox</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="radioButtonTestRadio">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>190</y>
+     <width>82</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RadioButton</string>
+   </property>
+  </widget>
+  <widget class="customIntegerComboBox" name="comboBoxIntegerBox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>280</y>
+     <width>74</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>1</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>99</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>156</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QComboBox" name="comboBoxStringBox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>320</y>
+     <width>74</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>eins</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>sieben</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>zehn</string>
+    </property>
+   </item>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>customFloatLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>functions/customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>customIntegerLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>functions/customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>customListLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>functions/customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>customIntegerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>functions/customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>customStringLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>functions/customGuiElements.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

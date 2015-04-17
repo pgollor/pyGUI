@@ -1,5 +1,4 @@
-<?xml version="1.0" ?><settings>
-	<checked checked="True" name="saveonexit"/>
-	<lastPosition x="554" y="87"/>
-	<lastTab module="-1" settings="0"/>
+<?xml version="1.0" ?>
+<settings>
+	<displayName name="pyGUI"/>	
 </settings>

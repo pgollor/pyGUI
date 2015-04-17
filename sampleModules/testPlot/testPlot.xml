@@ -5,9 +5,4 @@
 	
 	<default_settings>
 	</default_settings>
-	
-	<settings>
-	</settings>
-
-	<custom><blubb kk="false" tt="adsda"/><blubb test="123"/><test foo="bar"/><test foo="asdads"/><lll><kkasdk asdas="dasd"/></lll></custom>
 </module>

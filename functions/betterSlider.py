@@ -12,50 +12,66 @@
 # This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Germany License.<br>
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+#
+# @brief better slider class
+# 
+# todo:
+# - abstrakte Slider Klasse erstellen und davon integer und float ableiten
+#- valueChanged signal auf neue Signale umaendern. Das Problem zur Zeit, das Signal kann wohl nicht ohen weiteres einfach ueberladen werden??? 
 
 
-from PyQt4.QtCore import SIGNAL
-from PyQt4.QtGui import QSlider
+from PyQt4.QtCore import SIGNAL, pyqtSignal, pyqtSlot
+from PyQt4.QtGui import QSlider, QLabel, QLineEdit
 import numpy as np
 from functools import partial
 
 
 class betterSlider(QSlider):
-	__v_log = False
-	__v_double = False
-	__v_integer = False
-	__l_connectedItems = []
-	__v_minValue = -1
-	__v_maxValue = -1
-	__v_doubleStep = 0.1
-	__v_factor = 1000
-	__v_ndigits = 0
-	__v_lastValue = -1
-	
+	changed = pyqtSignal([int], [float])
+	#valueChanged = pyqtSignal([int], [float])
 	
 	def __init__(self, *args):
 		QSlider.__init__(self, *args)
 		
-		self.__l_connectedItems = []
-		self.__v_log = False
+		self.__initVars()
 		
 		# connect signals
-		self.connect(self, SIGNAL("actionTriggered(int)"), self.__onActionTriggered)
-		self.connect(self, SIGNAL("sliderReleased()"), self.__onSliderReleased)
-		self.connect(self, SIGNAL("valueChanged(int)"), self.__onValueChanged)
+		self.actionTriggered[int].connect(self.__onActionTriggered)
+		self.sliderReleased.connect(self.__onSliderReleased)
+		self.valueChanged[int].connect(self.__onValueChanged)
 	# end __init__
+	
+	def __initVars(self):
+		self.__v_log = False
+		self.__v_double = False
+		self.__v_integer = False
+		self.__l_connectedItems = []
+		self.__v_minValue = -1
+		self.__v_maxValue = -1
+		self.__v_doubleStep = 0.1
+		self.__v_factor = 1000
+		self.__v_ndigits = 0
+		self.__v_lastValue = -1
+	# end __initVars
 	
 	def __del__(self):
 		self.__l_connectedItems = []
 		self.__v_log = False
 	# end __del__
 	
+	@pyqtSlot(int)
 	def __onValueChanged(self, value):
 		"""
-		Signal ueberlagern, damit ddie berechnete Position gesendet wird
+		Signal ueberlagern, damit die berechnete Position gesendet wird
 		"""
 		
-		self.emit(SIGNAL("valueChanged(PyQt_PyObject)"), self.editedValue(value))
+		value = self.editedValue(value)
+		self.emit(SIGNAL("valueChanged(PyQt_PyObject)"), value)
+		#if (self.__v_double):
+		#	self.valueChanged[float].emit(value)
+		#else:
+		#	self.valueChanged[int].emit(value)
+		# end if
 	# end __onValueChanged
 	
 	def __onActionTriggered(self, action):
@@ -82,6 +98,11 @@ class betterSlider(QSlider):
 
 		if (self.__v_lastValue != value):
 			self.emit(SIGNAL("changed(PyQt_PyObject)"), value)
+			if (self.__v_double):
+				self.changed[float].emit(value)
+			else:
+				self.changed[int].emit(value)
+			# end if
 			self.__v_lastValue = value
 		# end if
 	# end __onItemChange
@@ -98,6 +119,12 @@ class betterSlider(QSlider):
 
 		if (self.__v_lastValue != value):
 			self.emit(SIGNAL("changed(PyQt_PyObject)"), value)
+			
+			if (self.__v_double):
+				self.changed[float].emit(value)
+			else:
+				self.changed[int].emit(value)
+			# end if
 			self.__v_lastValue = value
 		# end if
 	# end __emitchange
@@ -110,7 +137,7 @@ class betterSlider(QSlider):
 		self.__l_connectedItems.append(item)
 		val = self.editedValue()
 		#item.setText(str(round(val,self.__v_ndigits)))
-		item.setText(str(round(val,self.__v_ndigits)))
+		item.setText(str(round(val, self.__v_ndigits)))
 	# end __connectItem
 	
 	def __disconnectItem(self, item):
@@ -215,6 +242,14 @@ class betterSlider(QSlider):
 		return value
 	# end __checkMinMax
 	
+	def getMinValue(self):
+		return self.__v_minValue
+	# end getMinValue
+	
+	def getMaxValue(self):
+		return self.__v_maxValue
+	# end getMaxValue
+	
 	def setEditedValue(self, val, emitSignal = False):
 		if (self.__v_log and val <= 0):
 			return
@@ -287,8 +322,21 @@ class betterSlider(QSlider):
 	
 	def connectLineEdit(self, lineEdit):
 		self.__connectItem(lineEdit)
-		self.connect(lineEdit, SIGNAL("returnPressed()"), partial(self.__onItemChange, lineEdit))
+		#self.connect(lineEdit, SIGNAL("returnPressed()"), partial(self.__onItemChange, lineEdit))
+		lineEdit.returnPressed.connect(partial(self.__onItemChange, lineEdit))
 	# end connectLineEdit
+	
+	def connectElem(self, elem):
+		if (type(elem) == QLabel):
+			self.connectLabel(elem)
+		elif (type(elem) == QLineEdit):
+			self.connectLineEdit(elem)
+		else:
+			return False
+		# en dif
+		
+		return True
+	# end connectElem
 	
 	def disconnectLabel(self, label):
 		self.__disconnectItem(label)
@@ -305,6 +353,14 @@ class betterSlider(QSlider):
 	def getConnectedItems(self):
 		return self.__l_connectedItems
 	# end getConnectedLabels
+	
+	## read all connected elements for update
+	def update(self):
+		for item in self.__l_connectedItems:
+			value = float(item.text())
+			self.setEditedValue(value, False)
+		# end for
+	# end update
 	
 	def logarithm(self):
 		return self.__v_log

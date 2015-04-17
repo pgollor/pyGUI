@@ -1,7 +1,7 @@
 ##
-# @file changeDir.py
+# @file helper.py
 # 
-# @date 17.09.2013
+# @date 10.02.2015
 # @author Stanislav Tereschenko
 # @author Pascal Gollor (http://www.pgollor.de)
 # 
@@ -14,40 +14,22 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
 
-import os
-
-
-class changeDir():
-	# ---------- Private ----------
-
-	def __init__(self, path = ""):
-		self.__v_startPath = os.path.abspath(os.curdir)
-
-		if (path != ""):
-			self.changePath(path)
-		# end if
-	# end __init__
-
-	def __del__(self):
-		self.changeBack()
-	# end __del__
-
-	# ---------- Private ----------
-
-
-	# ---------- Public ----------
-
-	def changePath(self, path):
-		os.chdir(path)
-	# end changePath
-
-	def changeBack(self):
-		if (self.__v_startPath != ""):
-			os.chdir(self.__v_startPath)
-			self.__v_startPath = ""
-		# end if
-	#end changeBack
-
-	# ---------- Public ----------
-
-#end class changeDir
+## @brief check if checkClass in compareClassList
+def classEqual(checkClass, compareClassList):
+	if (checkClass in compareClassList):
+		return True
+	# end if
+	
+	# convert classes to string
+	checkClass = str(checkClass)
+	compareClassList = str(compareClassList)
+	
+	# remove some sub strings
+	checkClass = '.' + checkClass.replace('<class \'', '')
+	
+	if (compareClassList.find(checkClass) >= 0):
+		return True
+	# end if
+	
+	return False
+# end if

@@ -19,15 +19,15 @@ from PyQt4.QtCore import SIGNAL, QThread
 import time
 
 
-class progressBarThread(QThread):
-	__v_active = False
-	__v_progressVal = None
-	__v_progressMaxValue = None
-	__v_multiprocessing = True
-	
+class progressBarThread(QThread):	
 	def __init__(self, *args):
 		QThread.__init__(self, *args)
 		self.setObjectName("ProgressBarThread")
+		
+		self.__v_active = False
+		self.__v_progressVal = False
+		self.__v_progressMaxValue = False
+		self.__v_multiprocessing = False
 	# end __init__
 	
 	def stop(self):
@@ -35,16 +35,16 @@ class progressBarThread(QThread):
 	# end if
 	
 	def clear(self):
-		self.__v_progressVal = None
-		self.__v_progressMaxValue = None
-		self.__v_multiprocessing = True
+		self.__v_progressVal = False
+		self.__v_progressMaxValue = False
+		self.__v_multiprocessing = False
 	# end clear
 	
-	def setParameter(self, progressValue, progressMaxValue, multiprocessing = True):
+	def setParameter(self, progressValue, progressMaxValue, multiprocessing = False):
 		self.init(progressValue,progressMaxValue,multiprocessing)
 	# end setParameter
 	
-	def init(self, progressValue = 0, progressMaxValue = 100, multiprocessing = True, name = ''):
+	def init(self, progressValue = 0, progressMaxValue = 100, multiprocessing = False, name = ''):
 		self.__v_progressVal = progressValue
 		self.__v_progressMaxValue = float(progressMaxValue)
 		self.__v_multiprocessing = multiprocessing
@@ -56,9 +56,9 @@ class progressBarThread(QThread):
 		self.__v_active = True
 		
 		oldVal = None
-
+		
 		while (self.__v_active):
-			if (self.__v_progressVal == None):
+			if (self.__v_progressVal == False):
 				time.sleep(0.1)
 				continue
 			# end if
@@ -81,13 +81,13 @@ class progressBarThread(QThread):
 				# abbruch oder ende
 				self.emit(SIGNAL("sigProgressBarUpdate(PyQt_PyObject)"), [0, "disable"])
 				self.clear()
-
+				
 				continue
 			elif (command == -3):
 				# clear
 				self.emit(SIGNAL("sigProgressBarUpdate(PyQt_PyObject)"), [0, "clear"])
 				self.clear()
-
+				
 				continue
 			# end if
 			
@@ -98,21 +98,13 @@ class progressBarThread(QThread):
 			
 			# set value
 			val = int(100 * (value / self.__v_progressMaxValue))
-
+			
 			if (oldVal != val):
 				self.emit(SIGNAL("sigProgressBarUpdate(PyQt_PyObject)"), [val, "newVal"])
 				oldVal = val
 			# end if
 			
 			time.sleep(0.1)
-
-			#if (self.__v_multiprocessing):
-			#	time.sleep(0.25)
-			#	value = self.__v_progressVal.value
-			#else:
-			#	time.sleep(0.05)
-			#	value = self.__v_progressVal[0]
-			# end if
 		# end while
 		
 		self.emit(SIGNAL("sigProgressBarUpdate(PyQt_PyObject)"), [0, "disable"])

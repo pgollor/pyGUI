@@ -13,54 +13,161 @@
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
-from PyQt4.QtGui import QLabel, QLineEdit, QCheckBox, QRadioButton, QComboBox, QGroupBox
+from PyQt4.QtGui import QLabel, QLineEdit, QCheckBox, QRadioButton, QComboBox, QGroupBox,\
+	QSpinBox, QDoubleSpinBox, QSlider, QTextEdit, QPlainTextEdit
+
+
+supportedQtElements = (QLabel, QLineEdit, QCheckBox, QRadioButton, QComboBox, QGroupBox, QSpinBox, QDoubleSpinBox, QSlider, QTextEdit, QPlainTextEdit)
+supportedClassNames = ['label', 'lineedit', 'textedit', 'checkbox', 'radiobutton', 'groupbox', 'combobox', 'spinbox', 'betterslider']
+supportedTextElements = ['label', 'lineedit']
+supportedCheckedElements = ['checkbox', 'radiobutton', 'groupbox']
 
 
 def setGuiSettings(xmlList, parentElement):
-	retList = {"label" : list(), "lineedit" : list(), "checkbox" : list(), "radiobutton" : list(), "combobox" : list(), "groupbox" : list()}
-	setText = ['label', 'lineedit']
-	checked = ['checkbox', 'radiobutton', 'groupbox']
+	global supportedQtElements, supportedClassNames, supportedTextElements, supportedCheckedElements
+	
+	retList = {
+						supportedClassNames[0] : list(),
+						supportedClassNames[1] : list(),
+						supportedClassNames[2] : list(),
+						supportedClassNames[3] : list(),
+						supportedClassNames[4] : list(),
+						supportedClassNames[5] : list(),
+						supportedClassNames[6] : list(),
+						supportedClassNames[7] : list(),
+						supportedClassNames[8] : list()
+						}
 	
 	for elemClassName in xmlList:
 		if (elemClassName in retList):
 			for item in xmlList[elemClassName]['items']:
-				elem = parentElement.findChild((QLabel, QLineEdit, QCheckBox, QRadioButton, QComboBox, QGroupBox), item['name'])
+				elem = parentElement.findChild(supportedQtElements, item['name'])
 
 				if (not elem):
 					continue
 				# end if
 				
-				if (elemClassName in setText):
+				# min and max or list values for line edit		
+				if (elemClassName == "lineedit"):
+					elemFunctions = dir(elem)
+					
+					if ('maxVal' in item and 'minVal' in item and 'setMinMax' in elemFunctions):
+						elem.setMinMax(item['minVal'], item['maxVal'])
+					# end if
+					
+					if ('list' in item and 'setList' in elemFunctions):
+						elem.setList(item['list'])
+					# end if
+				# end if
+				
+				# set element values
+				if (elemClassName == 'textedit'):
+					elem.setPlainText(item['plainText'])
+				elif (elemClassName in supportedTextElements):
 					elem.setText(item['text'])
-				elif (elemClassName in checked):
+				elif (elemClassName in supportedCheckedElements):
 					elem.setChecked(str2bool(item['checked']))
 				elif (elemClassName == 'combobox'):
-					# if index is integer then set index directly
+					# force using content
+					if ('content' in item):
+						index = elem.findText(str(item['content']))
+					else:
 					
-					index = 0
-					try:
-						index = int(item['index'])
-						
-						# Wenn der Zahlenwert groesser als die Anzahl der Elemente ist,
-						# dann koennte es sein, dass dies ein Wert und kein Index ist.
-						if (index >= elem.count()):
+						# if index is integer then set index directly
+						index = 0
+						try:
+							index = int(item['index'])
+							
+							# Wenn der Zahlenwert groesser als die Anzahl der Elemente ist,
+							# dann koennte es sein, dass dies ein Wert und kein Index ist.
+							if (index >= elem.count()):
+								index = elem.findText(str(item['index']))
+							# end if
+						except:
+							# string is given
 							index = elem.findText(str(item['index']))
-						# end if
-					except:
-						# string is given
-						index = elem.findText(str(item['index']))
-					# end try
+						# end try
+					# end if
 					
 					if (index >= 0 and index < elem.count()):
 						elem.setCurrentIndex(index)
 					else:
 						elem.setCurrentIndex(0)
 					# end if
+				elif (elemClassName == 'spinbox'):
+					if ('type' not in item or item['type'] == 'int'):
+						elem.setValue(int(item['value']))
+					else:
+						elem.setValue(float(item['value']))
+					# end if
+				#elif (elemClassName == 'betterslider' and isinstance(elem, betterSlider)):
+				elif (elemClassName == 'betterslider'):
+					# own better slider class
+					# supported elements for betterSlider class:
+					# type: integer, double, logarithm
+					# value: current value
+					# minVal: minimum value
+					# maxVal: maximum value
+					# step: step size for normal change (optional not for logarithm)
+					# pageStep: step size for page change (optional not for logarithm)
+					# connectedLabels: list for connected labels separated by , (optional)
+					# connectedLineEdits: list for connected line edits separated by , (optional)
+					
+					if ('type' not in item or 'value' not in item or 'maxVal' not in item or 'minVal' not in item):
+						continue
+					# end if
+					
+					if ('step' not in item):
+						item['step'] = 1
+					# end if
+					if ('pageStep' not in item):
+						item['pageStep'] = 10
+					# end if
+
+					# init betterSlider with type and values
+					try:
+						if (item['type'] == 'integer'):
+							elem.initInteger(int(item['minVal']), int(item['maxVal']), int(item['step']))
+							elem.setPageStep(int(item['pageStep']))
+							elem.setEditedValue(int(item['value']))
+						elif (item['type'] == 'double'):
+							elem.initDouble(float(item['minVal']), float(item['maxVal']), float(item['step']))
+							elem.setPageStep(float(item['pageStep']))
+							elem.setEditedValue(float(item['value']))
+						elif (item['type'] == 'logarithm'):
+							elem.initLogarithm(float(item['minVal']), float(item['maxVal']))
+							elem.setEditedValue(float(item['value']))
+						else:
+							continue
+						# end if
+					except:
+						continue
+					# end try
+					
+					# add conected items
+					if ('connectedLabels' in item):
+						connectedLabels = item['connectedLabels'].split(',')
+						for name in connectedLabels:
+							label = parentElement.findChild(QLabel, name.strip())
+							if (label):
+								elem.connectLabel(label)
+							# end if
+						# end for
+					# end if
+					if ('connectedLineEdits' in item):
+						connectedLineEdits = item['connectedLineEdits'].split(',')
+						for name in connectedLineEdits:
+							lineedit = parentElement.findChild(QLineEdit, name.strip())
+							if (lineedit):
+								elem.connectLineEdit(lineedit)
+							# end if
+						# end for
+					# end if
 				else:
 					continue
 				# end if
 				
-				retList[elemClassName].append(item['name'])
+				retList[elemClassName].append({'name': item['name'], 'handle': elem})
 			# end for
 		# end if
 	# end for
@@ -70,25 +177,36 @@ def setGuiSettings(xmlList, parentElement):
 
 
 def loadGuiChange(xmlList, parentElement):
-	supportetElements = ['label', 'lineedit', 'checkbox', 'radiobutton', 'groupbox', 'combobox']
-	setText = ['label', 'lineedit']
-	checked = ['checkbox', 'radiobutton', 'groupbox']
+	global supportedQtElements, supportedClassNames, supportedTextElements, supportedCheckedElements
 	
 	for elemClassName in xmlList:
-		if (elemClassName in supportetElements):
+		if (elemClassName in supportedClassNames):
 			for item in xmlList[elemClassName]['items']:
-				elem = parentElement.findChild((QLabel, QLineEdit, QCheckBox, QRadioButton, QComboBox, QGroupBox), item['name'])
+				elem = parentElement.findChild(supportedQtElements, item['name'])
 
 				if (not elem):
 					continue
 				# end if
 				
-				if (elemClassName in setText):
+				# search for supported element class to get value changes
+				if (elemClassName == 'textedit'):
+					item['plainText'] = elem.toPlainText()
+				elif (elemClassName in supportedTextElements):
 					item['text'] = elem.text()
-				elif (elemClassName in checked):
+				elif (elemClassName in supportedCheckedElements):
 					item['checked'] = str(elem.isChecked())
 				elif (elemClassName == 'combobox'):
-					item['index'] = elem.currentText()
+					# force using content
+					if ('index' in item):
+						item.pop('index')
+					# end if
+
+					item['content'] = elem.currentText()
+				elif (elemClassName == 'spinbox'):
+					item['value'] = elem.value()
+				elif (elemClassName == 'betterslider'):
+					# own better slider class
+					item['value'] = elem.editedValue()
 				else:
 					continue
 				# end if

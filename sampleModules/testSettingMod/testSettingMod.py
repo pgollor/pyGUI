@@ -14,7 +14,6 @@
 # 
 # @brief This is a tiny demo settings module. 
 
-from PyQt4.QtCore import SIGNAL
 from abstractModuleClass import settingModuleClass
 
 
@@ -33,6 +32,7 @@ from abstractModuleClass import settingModuleClass
 # 	initGui(self)
 # 	onClose(self)
 # 	onActive(self)
+# 	onInactive(elf)
 # 
 # - You can load other module handles by _getModuleArray()
 # - You can get other files by getIncludes()
@@ -57,11 +57,13 @@ class module(settingModuleClass):
 	# ---------- overrided functions ----------
 
 	def initModule(self):
-		pass
+		settingModuleClass.initModule(self)
 	# end _initModule
 
 	def initGUI(self):
-		self.connect(self.pushButton, SIGNAL("clicked()"), self.__onPushButton)
+		self.pushButton.clicked.connect(self.__onPushButton)
+		
+		settingModuleClass.initGUI(self)
 	# end _initGUI
 
 	# ---------- overrided functions ----------
