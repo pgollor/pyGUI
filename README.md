@@ -24,8 +24,8 @@ Dazu gibt es drei verschiedene arten von Modulen die man in der pyGUI hinzufüge
 * *settings* Module
 * *application* Module
 
-Das hidden Modul eignet sich perfekt um eine Schnittstelle zu einer DLL, Hardware oder sonst etwas für andere Module herzustellen. Auf diese Schnittstelle kann dann zum Beispiel ein settings Modul oder ein applikation Modul zugreifen. Das hidden Modul hat dabei keine grafische Ausgabe.<br>
-Das settings und das application Modul sind im Grunde genommen gleichwertige Module mit der Ausnahme, dass die apllication Module in der GUI direkt angezeigt werden und die settings Module nur über das Menü „Settings“ zu erreichen sind. Dies soll die bekannt Struktur von Programmen widerspiegeln.<br><br>
+Das *hidden* Modul eignet sich perfekt um eine Schnittstelle zu einer DLL, Hardware oder sonst etwas für andere Module herzustellen. Auf diese Schnittstelle kann dann zum Beispiel ein *settings* Modul oder ein *applikation* Modul zugreifen. Das *hidden* Modul hat dabei keine grafische Ausgabe.<br>
+Das *settings* und das *application* Modul sind im Grunde genommen gleichwertige Module mit der Ausnahme, dass die *apllication* Module in der GUI direkt angezeigt werden und die *settings* Module nur über das Menü „Module Settings“ zu erreichen sind. Dies soll die bekannt Struktur von Programmen widerspiegeln.<br><br>
 
 Ein paar Testmodule sind in der GUI unter „sampleModules“ enthalten und können bei bedarf in den Ordner „modules“ eingefügt werden. Zum aktivieren des Moduls muss dieses unter dem Menüreiter „Main->Modules“ ausgewählt werden. Nach einem Neustart des Programms wird es automatisch geladen.
 
