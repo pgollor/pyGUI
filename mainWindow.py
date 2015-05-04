@@ -394,12 +394,13 @@ class mainWindow(QMainWindow):
 			moduleHand = module['handle']
 			
 			try:
+				# Wichtig: Damit auch bei nicht geladenen Modulen die dependencies ueberprueft werden koennen.
+				abstractModuleClass.d_modules[moduleName] = module
+				
 				# if module not used
 				if (module["modHandle"] == False):
 					continue
 				# end if
-				
-				abstractModuleClass.d_modules[moduleName] = module
 				
 				moduleDir = modulesPath + module["suffix"] + moduleName
 	
