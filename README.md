@@ -17,6 +17,7 @@ $ git clone https://github.com/pgollor/pyGUI.git
 $ cd pyGUI
 $ mkdir modules
 $ cp -R ./sampleModules/* ./modules/
+$ chmod 755 main.py
 ```
 For more information please see the german description below or the doxygen help in ```doc/index.chm``` folder.<br>
 
@@ -24,6 +25,13 @@ For more information please see the german description below or the doxygen help
 ```
 $ doxygen pyGUI.doxyfile
 ```
+
+### Usage
+```
+$ ./main.py
+```
+For debugging use the ```-d``` option and for logging ```-l LOGLEVEL```.<br>
+You can use ```--help``` for detail information.
 
 ### [Change log](CHANGELOG.md)
 
