@@ -10,17 +10,33 @@ Im Rahmen einer Dissertation entstand als Nebenprodukt eine Software-Umgebung um
 <br>Ich möchte aber ausdrücklich betonen, dass die Veröffentlichung der pyGUI als Opensource-Lizenz von mir und Stanislav Tereschenko ausschließlich privat erfolgt. **Das heißt, dass die Veröffentlichung vom Fachgebiet Messtechnik gestattet wurde, aber das Fachgebiet Messtechnik keinerlei Support oder Haftung übernimmt!**<br><br>
 Darüber hinaus möchte ich um Verständnis werben, dass aus verständlichen Gründen nur die GUI an sich und keinerlei Messabläufe, Algorithmen oder Hardwareschnittstellen in der pyGUI enthalten sind.
 
+### Installing
+* install winPython 3.4.xx or python3-spyderlib
+```
+$ git clone https://github.com/pgollor/pyGUI.git
+$ cd pyGUI
+$ mkdir modules
+$ cp -R ./sampleModules/* ./modules/
+```
+For more information please see the german description below or the doxygen help in ```doc/index.chm``` folder.<br>
+
+### Doxygen help as html
+```
+$ doxygen pyGUI.doxyfile
+```
+
+### [Change log](CHANGELOG.md)
+
+### Todo
+* replace all old qt signals with new qt signal management
+* add linux help
+* use other plot functions
+
+
 ## Grundidee
 Im Fachgebiet sollten verschiedene Messabläufe insbesondere für hochauflösende Interferometer aber auch anschließende Auswertung und Darstellung der Messergebnisse in Python realisiert werden. Das kann man entweder mit X verschiedenen Messprogramm realisieren, oder man entwickelt ein modulares Konstrukt, das man mit den verschiedensten Modulen füttern kann, um Messungen durchführen zu können und eine grafische Ausgabe daraus zu generieren. Daraus entstand die Grundidee zur pyGUI.<br><br>
 
 Aus dieser Grundidee ist eine kleine Eierlegendewollmilchsau geworden, die wir gerne der Opensourcegemeinschaft zur Verfügung stellen möchten. Leider ist aus Zeitgründen die Dokumentation noch sehr rudimentär bzw. schnell zusammen geschrieben. Das werde ich aber so schnell wie möglich versuchen nachzubessern. Aktuell wird mit doxygen eine pdf und eine Windows-Hilfe erstellt. Die Windows-Hilfe soll unter Windows auch noch Zeitnah in die pyGUI direkt eingebunden werden.
-
-## [Change log](CHANGELOG.md)
-
-## Todo
-* replace all old qt signals with new qt signal management
-* add linux help
-* use other plot functions
 
 ## Grobes Konstrukt
 Da das Programm modular aufgebaut ist, ist es nicht auf Messabläufe beschränkt. Jeder erdenklicher Programmablauf lässt sich in verschiedenen Modulen nachbilden, mit der die pyGUI gefüttert werden kann.<br>
