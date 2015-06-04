@@ -352,11 +352,13 @@ class customListLineEdit(abstractCustomLineEdit):
 		self.__l_list = []
 	# end __initVars
 	
-	def __check(self, value='', quiet=False):
+	def __check(self, value = '', quiet = False):
 		if (value == ''):
 			value = self.text()
 		# end if
 		
+		#print(value)
+		#print(self.__l_list)
 		value = str(value)
 
 		if (value not in self.__l_list):
@@ -371,7 +373,11 @@ class customListLineEdit(abstractCustomLineEdit):
 	# end __check
 	
 	def setList(self, strList):
-		self.__l_list = str(strList).split(sep = ',')
+		if (type(strList) != list):
+			self.__l_list = str(strList).split(sep = ',')
+		else:
+			self.__l_list = strList
+		# end if
 		
 		return True
 	# end setList
@@ -405,20 +411,27 @@ class customListLineEdit(abstractCustomLineEdit):
 
 
 
-class customIntegerComboBox(QComboBox):
+class abstractCustomComboBox(QComboBox):
 	def __init__(self, *args, **kwargs):
 		QComboBox.__init__(self, *args, **kwargs)
 	# end __init__
 	
 	def currentText(self, *args, **kwargs):
-		return self.__convert(QComboBox.currentText(self, *args, **kwargs))
+		return self.convert(QComboBox.currentText(self, *args, **kwargs))
 	# end currentText
 	
 	def itemText(self, *args, **kwargs):
-		return self.__convert(QComboBox.itemText(self, *args, **kwargs))
+		return self.convert(QComboBox.itemText(self, *args, **kwargs))
 	# end itemText
+# end class abstractCustomComboBox
+
+
+class customIntegerComboBox(abstractCustomComboBox):
+	def __init__(self, *args, **kwargs):
+		abstractCustomComboBox.__init__(self, *args, **kwargs)
+	# end __init__
 	
-	def __convert(self, value):
+	def convert(self, value):
 		try:
 			value = int(value)
 		except:
@@ -431,20 +444,12 @@ class customIntegerComboBox(QComboBox):
 # end class customIntegerComboBox
 
 
-class customFloatComboBox(QComboBox):
+class customFloatComboBox(abstractCustomComboBox):
 	def __init__(self, *args, **kwargs):
-		QComboBox.__init__(self, *args, **kwargs)
+		abstractCustomComboBox.__init__(self, *args, **kwargs)
 	# end __init__
 	
-	def currentText(self, *args, **kwargs):
-		return self.__convert(QComboBox.currentText(self, *args, **kwargs))
-	# end currentText
-	
-	def itemText(self, *args, **kwargs):
-		return self.__convert(QComboBox.itemText(self, *args, **kwargs))
-	# end itemText
-	
-	def __convert(self, value):
+	def convert(self, value):
 		try:
 			value = float(value)
 		except:

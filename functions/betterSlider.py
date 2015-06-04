@@ -13,7 +13,7 @@
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 #
-# @brief better slider class
+# @brief betterSlider class
 # 
 # todo:
 # - abstrakte Slider Klasse erstellen und davon integer und float ableiten
@@ -217,6 +217,9 @@ class betterSlider(QSlider):
 			maxval = np.log10(maxval) * 1000
 			step = np.round((maxval - minval) / 1000, 0)
 			step = np.int32(step)
+			
+			minval = np.int32(minval)
+			maxval = np.int32(maxval)
 
 			self.setMinimum(minval)
 			self.setMaximum(maxval)

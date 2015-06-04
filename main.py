@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 ##
 # @file main.py
 # 
@@ -19,45 +21,86 @@
 # @section Modules
 # @subsection Allgemein
 # Es gibt eine abstrakte Oberklasse(abstractModuleClass) von dieser alle Module abgeleitet werden.
-# Drei verschiedene Modulklassen sind möglich:
+# Drei verschiedene Modulklassen sind moeglich:
 # - hidden
 # - settings
 # - application
 #
-# Die einzelnen Module werden in dieser Reihenfolge geladen. Innerhalb eines Modultyps werden die Module nach alphabethischer Reihenfolge geladen. Falls es notwendig ist, dass ein Modul zwingend von einem anderen Modul des gleichen Typs abhängt, sollte man den Ordner des Moduls mit einer Zahl vor dem Modulnahmen versehen.
-# Falls Modul xy zwingend das Modul zz benötigt, sollte (NUR) der Ordnernamen des Moduls zz z.B. in 10zz umbenannt werden. Damit ist sicher gestellt, dass das Modul zz vor dem Modul xy geladen wird.
+# Die einzelnen Module werden in dieser Reihenfolge geladen.
+# Innerhalb eines Modultyps werden die Module nach alphabethischer Reihenfolge geladen.
+# Falls es notwendig ist, dass ein Modul zwingend von einem anderen des gleichen Typs abhaengt, sollte man den Ordner des Moduls mit einer Zahl vor dem Modulnahmen versehen.
+# Falls Modul xy zwingend das Modul zz benoetigt, sollte (NUR) der Ordnernamen des Moduls zz z.B. in 10zz umbenannt werden.
+# Damit ist sicher gestellt, dass das Modul zz vor dem Modul xy geladen wird.
 # 
-# Jedes Modul besitzt zwingend ein eigenen Unterordner mit dem Namen des Modules im Ordner modules.
-# In diesem Ordner müssen folgende Dateien mindestens enthalten sein:
-# - [MODULNAME].py 
-# - [MODULNAME].xml (nicht für hidden Module) 
-# - [MODULNAME].ui (nicht für hidden Module) 
+# Jedes Modul muss ein eigenen Unterordner mit dem Namen des Modules im Ordner modules besitzen.
+# In diesem Ordner muessen folgende Dateien mindestens enthalten sein:
+# - [MODULNAME].py
+# - [MODULNAME].ui (nicht fuer hidden Module) 
 # 
-# Die genaue Struktur dieser Dateien kann in den Beispielmodulen nachgelesen werden. Die Klasse des Moduls muss immer module heißen und von der jeweils dazugehörigen Elternklasse abgeleitet sein: 
+# Die genaue Struktur dieser Dateien kann in den Beispielmodulen nachgelesen werden.
+# Die Klasse des Moduls muss immer module heissen und von der jeweils dazugehoerigen Elternklasse abgeleitet sein: 
 # - class module(applicationModuleClass): 
 # - class module(applicationModuleClass):
 # - class module(hiddenModuleClass):
 # 
-# Für die Module settings und application können Werte verschiedener Qt Elemente automatisch gespeichert werden. Dazu werden diese einfach als Standardeinstellungen (default settings) in die dazugehörige xml eingetragen. die Syntax sieht dazu wie folgt aus: 
-# - label: <label name="label" text="default text from xml" /> 
-# - lineedit: <lineedit name="lineEditPiezoStep" text="0.02" /> 
-# - checkbox: <checkbox name="checkBoxTest" checked="True" /> 
-# - radiobutton: <radiobutton name="radioButton_1" checked="True" />
-# - groupbox: <groupbox checked="False" name="groupBoxExtTrigger" />
-# - combobox: <combobox index="0" name="comboBoxSerialPorts" />
-# Falls in der Gui unter Settings die Einstellung Save on exit aktiviert ist, werden dann die geänderten Einstellung automatisch beim Beenden des Programms gespeichert und nach erneutem Start wieder geladen.
+# Fuer die Module "settings" und "application" koennen Werte verschiedener Qt Elemente automatisch gespeichert werden.
+# Dazu fragt de rModulhandler die Funktion "getDefaultSettings" in jedem Modul ab.
+# Falls die Funktion nicht vorhanden ist, wird davon ausgegangen, dass keine Einstellungen gespeichert werden sollen.
+# Als Rueckgabewerte muss ein Dictionary zurueck gegeben werden in dem die zu speichernden Informationen enthalten sind.
+# Um z.B. den Inhalt eines QLineEdits zu speichern saehe das dict wie folgt aus:  
+# <pre>
+#{
+#"inhaltXY" = {"qName": "labelXY", "value" = "Irgend ein Inhalt"}
+#}</pre>
+# 
+# Die beiden Parameter "qName" und "value" muessen fuer jeden Eintrag zwingend vorhanden ein.
+# Der Schluessel "inhaltXY" kann hingegen frei gewaehlt werden.
+# Dies entspricht danna auch dem Listeneintrag wenn das Modul waehrend der Laufzeit seine Einstellungen mit "self._getSettings()" abfragt.
+# @n Der Wert zu "qName" ist der Name des dazugehoerigen Qt Elements und "value" der Inhalt der als default angegeben wird.
+# Das heisst je nach Qt Element kann "value" auch leer sein.
+# @n Neben QLabel werden von der GUI auch noch weitere Qt Elemente unterstuetzt:
+# - QCheckBox, QRadioButton und QGroupBox:
+# @n Es wird der Status "checked()" gespeichert. Dazu ist "value" als bool anzugeben. Die Groupbox muss dafuer "checkable" sein.
+# <pre>{
+#  "X" = {"qName": "checkBoxX", "value": False},
+#  "Y" = {"qName": "radioButtonY", "value": True},
+#  "Z" = {"qName": "groupBoxZ", "value": True}
+#}</pre>
+# - QComboBox
+# <pre>{
+#  "X" = {"qName": "comboBoxX", "value": "Inhalt"}
+#}</pre>
+# - QSpinBox und QDoubleSpinBox
+# @n Beid er spinBox sollten Integers verwendet werden und fuer die doubleSpingBox floats.
+# <pre>{
+#  "X" = {"qName": "spinBoxX", "value": 2, "minVal": 0, "maxVal": 10, "step": 1},
+#  "Y" = {"qName": "doubleSpinBoxY", "value": 1.0, "minVal": 0.0, "maxVal": 10.0, "step": 0.1},
+#}</pre>
+# - betterSlider
+# @n vohanden sein muessen; "qName", "value", "type", "maxVal" und "minVal"
+# @n "type": integer, double, logarithm
+# @n optiional sind: "step" (default: 1), "pageStep" (default 10), "connectedLabels", "connectedLineEdits"
+# <pre>{
+#  "X": {"qName": "horizontalSliderX", "type": "double", "value": 10, "minVal": 0, "maxVal": 100, "step": 0.1, "pageStep": 20, "connectedLabels": ["labelTestSl"], "connectedLineEdits": ["lineEditTextSl"]},
+#}</pre>
+# - QTextEdit und QPlainTextEdit
+# <pre>{
+#  "X" = {"qName": "textEdit", "value": "Inhalt"}
+#}</pre>
+# 
+# Falls in der Gui unter Settings die Einstellung Save on exit aktiviert ist, werden dann die geaenderten Einstellung automatisch beim Beenden des Programms gespeichert und nach erneutem Start wieder geladen.
 # 
 # @section Modultypen
 # @subsection hidden-Modul
-# Ein hidden Modul enthält keine Funktionen für die eigentliche Oberfläche. In diesen Modulen werden nur Funktionen oder externe Klassen bereit gestellt die von anderen Modulen verwendet werden. 
+# Ein hidden Modul enthaelt keine Funktionen fuer die eigentliche Oberflaeche. In diesen Modulen werden nur Funktionen oder externe Klassen bereit gestellt die von anderen Modulen verwendet werden. 
 # 
 # @subsection settings-Modul
-# Diese Module werden in dem Tab "settings" angezeigt und setzen z.B. einfach nur Einstellungen für andere Module (im Idealfall der hidden Module).
-# Aber diese stellen schon eine graphische Oberfläche für die Einstellungen durch den Benutzer bereit. 
+# Diese Module werden in dem Tab "settings" angezeigt und setzen z.B. einfach nur Einstellungen fuer andere Module (im Idealfall der hidden Module).
+# Aber diese stellen schon eine graphische Oberflaeche fuer die Einstellungen durch den Benutzer bereit. 
 # 
 # @subsection application-Modul
-# Diese Module sind die eigentliche Benutzeroberfläche. Für jedes Modul wird ein eigener Tab geladen.
-# In diesem Tab werden automatisch die Oberflächenelemente von Qt geladen, die in der dazu gehörigen ui-Datei gespeichert sind. 
+# Diese Module sind die eigentliche Benutzeroberflaeche. Fuer jedes Modul wird ein eigener Tab geladen.
+# In diesem Tab werden automatisch die Oberflaechenelemente von Qt geladen, die in der dazu gehoerigen ui-Datei gespeichert sind. 
 #
 # @section function Funktionen in der Modulklasse
 # @subsection must-have must have
@@ -70,20 +113,22 @@
 # </pre>
 # 
 # @subsection optional
-# Alle anderen Funktionen sind als Virtuelle-Funktionen bereits vorhanden die überladen werden können.
+# Alle anderen Funktionen sind als Virtuelle-Funktionen bereits vorhanden die ueberladen werden koennen.
 # Diese werden in folgender Reihenfolge aufgerufen:
 # - initPreSettings(self): Wird geladen bevor die Einstellungen aus der XML-Datei geladen werden.
-# - initModule(self): Ist zum initialisieren von Klassen aus anderen Modulen und für Klassen aus dem eigenen Ordner gedacht. Dazu wird für diese Funktion vom Modulhandler in das Modulverzeichnis gewechselt.
+# - initModule(self): Ist zum initialisieren von Klassen aus anderen Modulen und fuer Klassen aus dem eigenen Ordner gedacht. Dazu wird fuer diese Funktion vom Modulhandler in das Modulverzeichnis gewechselt.
 # - initGui(self): Ist zum initialisieren der GUI Elemente gedacht.
-# - onClose(self): Wird beim Beenden aufgerufen bevor die Klasse gelöscht wird.
-# - onActive(self): Wird jedes mal für das Modul aufgerufen, dass in der GUI ausgewählt wurde. 
+# - onClose(self): Wird beim Beenden aufgerufen bevor die Klasse geloescht wird.
+# - onActive(self): Wird jedes mal fuer das Modul aufgerufen, dass in der GUI ausgewaehlt wurde.
+# - onInactive(self): Gegenteil von "onActive".
+# - getDefaultSettings(self)
 #
-# Die Funktionen initPreSettings und initModule werden hintereinander nach der oben beschriebenen Modulreihenfolge ausgeführt.
-# Nach dem diese Funktionen bei ALLEN Modulen ausgeführt wurden, wird nach der gleichen Reihenfolge die Funktion initGui ausgeführt. 
+# Die Funktionen initPreSettings und initModule werden hintereinander nach der oben beschriebenen Modulreihenfolge ausgefuehrt.
+# Nach dem diese Funktionen bei ALLEN Modulen ausgefuehrt wurden, wird nach der gleichen Reihenfolge die Funktion initGui ausgefuehrt.
 # 
 
 
-import sys, os, logging
+import sys, os, logging, optparse
 from PyQt4 import QtGui
 from mainWindow import mainWindow
 from functions.guiLogger import QtLogger
@@ -96,7 +141,40 @@ if dll_path not in global_path:
 # end if
 
 
-DEBUG = True
+
+
+def parser():
+	# parser
+	parser = optparse.OptionParser(
+		usage = "%prog [options]",
+		description = "pyGUI - Modular GUI based on python and qt."
+	)
+	
+	group = optparse.OptionGroup(parser, "Diagnostics")
+	group.add_option("-d", "--debug",
+		dest = "debug",
+		action = "store_true",
+		help = "Show debug output. And override loglevel with debug.",
+		default = False
+	)
+	group.add_option("-l", "--loglevel",
+		dest = "loglevel",
+		action = "store",
+		type = 'int',
+		help = "Loglevel for python logger. " + str(logging.CRITICAL) + ": critical  " + str(logging.ERROR) + ": error  " + str(logging.WARNING) + ": warning  " + str(logging.INFO) + ":info  " + str(logging.DEBUG) + ":debug",
+		default = logging.ERROR
+	)
+	parser.add_option_group(group)
+
+	(options, args) = parser.parse_args()
+	
+	if (options.debug == True):
+		options.loglevel = logging.DEBUG
+	# end if
+	
+	return options
+# end parser
+
 
 
 ## @brief main function
@@ -104,20 +182,24 @@ DEBUG = True
 if __name__ == '__main__':
 	## set basic logging settings add own logger stream
 	# Set loglevel not to debug, because qt create much debug outputs. 
-	logging.basicConfig(level=logging.WARNING, format='%(asctime)-9s %(name)s [%(levelname)s]: %(message)s', datefmt='%H:%M:%S', handlers = [QtLogger()])
+	logging.basicConfig(level = logging.WARNING, format='%(asctime)-9s %(name)s [%(levelname)s]: %(message)s', datefmt='%H:%M:%S', handlers = [QtLogger()])
+	
+	# parser
+	options = parser()
 
+	# create Qt application
 	app = QtGui.QApplication(sys.argv)
 	
-	if (DEBUG == True):
-		w = mainWindow()
-		w.init()
+	if (options.debug == True):
+		w = mainWindow(loglevel = options.loglevel, debug = options.debug)
+		w.init(app.desktop().availableGeometry())
 		w.show()
 	else:
 		try:
-			w = mainWindow()
+			w = mainWindow(loglevel = options.loglevel, debug = options.debug)
 		
 			# init main window
-			w.init()
+			w.init(app.desktop().availableGeometry())
 	
 			# show main gui	
 			w.show()

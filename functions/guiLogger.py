@@ -17,7 +17,7 @@
 
 
 import logging
-from PyQt4.QtCore import Qt, pyqtSlot, QSize, QEvent
+from PyQt4.QtCore import Qt, pyqtSlot, QSize, QEvent, pyqtSignal
 from PyQt4.QtGui import QListWidgetItem, QBrush, QListWidget, QMenu, QApplication,\
 	QCursor, QDockWidget
 
@@ -49,8 +49,16 @@ class QtLogger(logging.Handler):
 			# end if
 			
 			# add item to list view and scroll to them
+			if (QtLogger.printObj.count() > 100):
+				QtLogger.printObj.takeItem(0)
+			# end if
+			
 			QtLogger.printObj.addItem(item)
 			#QtLogger.printObj.scrollToItem(item)
+			#QtLogger.printObj.scrollToBottom()
+			#QtLogger.printObj.insertItem(0, item)
+			
+			QtLogger.printObj.itemAdded.emit()
 		else:
 			print(s)
 		# end if
@@ -91,6 +99,8 @@ class QtLoggerDockWidget(QDockWidget):
 
 
 class QtLoggerListWidget(QListWidget):
+	itemAdded = pyqtSignal()
+	
 	def __init__(self, *args, **kwargs):
 		QListWidget.__init__(self, *args, **kwargs)
 		
@@ -98,6 +108,9 @@ class QtLoggerListWidget(QListWidget):
 		
 		self.setMinimumHeight(100)
 		self.setAutoScroll(True)
+		
+		# connect own signal with own slot for scrolling
+		self.itemAdded.connect(self.scrollToBottom)
 	# end __init__
 	
 	def sizeHint(self):
@@ -124,9 +137,13 @@ class QtLoggerListWidget(QListWidget):
 	def contextMenuEvent(self, event):
 		# create poup menu
 		popup = QMenu(self)
+
+		# ad actions
 		popup.addAction('clear all', self.__onConsoleClearAll)
 		copyAction = popup.addAction('copy line', self.__onConsoleCopy)
 		popup.addAction('insert empty line', self.__onConsoleEmpty)
+		popup.addAction('jump to top', self.scrollToTop)
+		popup.addAction('jump to bottom', self.scrollToBottom)
 
 		if (self.count() == 0):
 			copyAction.setEnabled(False)

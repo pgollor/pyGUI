@@ -24,6 +24,8 @@ class module(applicationModuleClass):
 
 	def __init__(self, parent, name):
 		applicationModuleClass.__init__(self, parent, name)
+		
+		self.setDisplayName('testProgressBar')
 	# end __init__
 
 	def __onPushButtonInit(self):

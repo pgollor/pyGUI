@@ -16,8 +16,8 @@
 # @brief menu buttons for main window tool bar
 
 
-from PyQt4.QtGui import QToolButton, QIcon, QWidget, QDrag, QToolBar
-from PyQt4.QtCore import Qt, QSize, pyqtSignal, QMimeData, QPoint
+from PyQt4.QtGui import QToolButton, QIcon, QWidget, QToolBar
+from PyQt4.QtCore import Qt, QSize, pyqtSignal
 
 
 class menuButton(QToolButton):	
@@ -34,6 +34,10 @@ class menuButton(QToolButton):
 		# make button checkable. this is required for css functions like checked ...
 		self.setCheckable(True)
 	# end __init__
+	
+	def __del__(self):
+		pass
+	# end __del__
 	
 	def setText(self, text):
 		text = str(text)

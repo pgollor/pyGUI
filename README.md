@@ -15,8 +15,14 @@ Im Fachgebiet sollten verschiedene Messabläufe insbesondere für hochauflösend
 
 Aus dieser Grundidee ist eine kleine Eierlegendewollmilchsau geworden, die wir gerne der Opensourcegemeinschaft zur Verfügung stellen möchten. Leider ist aus Zeitgründen die Dokumentation noch sehr rudimentär bzw. schnell zusammen geschrieben. Das werde ich aber so schnell wie möglich versuchen nachzubessern. Aktuell wird mit doxygen eine pdf und eine Windows-Hilfe erstellt. Die Windows-Hilfe soll unter Windows auch noch Zeitnah in die pyGUI direkt eingebunden werden.
 
-## Grobes Konstrukt
+## [Change log](CHANGELOG.md)
 
+## Todo
+* replace all old qt signals with new qt signal management
+* add linux help
+* use other plot functions
+
+## Grobes Konstrukt
 Da das Programm modular aufgebaut ist, ist es nicht auf Messabläufe beschränkt. Jeder erdenklicher Programmablauf lässt sich in verschiedenen Modulen nachbilden, mit der die pyGUI gefüttert werden kann.<br>
 Das heißt, dass die pyGUI eine grafische Benutzeroberfläche zur Verfügung stellt die mit Qt realisiert wurde und die Module auf einige Standardelemente (Logging, GUI Elemente automatisch speichern, …) zurückgreifen können.<br>
 Dazu gibt es drei verschiedene arten von Modulen die man in der pyGUI hinzufügen kann:

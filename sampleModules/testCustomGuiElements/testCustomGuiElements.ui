@@ -28,7 +28,7 @@
     <rect>
      <x>160</x>
      <y>20</y>
-     <width>75</width>
+     <width>101</width>
      <height>23</height>
     </rect>
    </property>
@@ -71,7 +71,7 @@
     <rect>
      <x>20</x>
      <y>160</y>
-     <width>71</width>
+     <width>121</width>
      <height>18</height>
     </rect>
    </property>
@@ -100,7 +100,7 @@
     <rect>
      <x>20</x>
      <y>190</y>
-     <width>82</width>
+     <width>121</width>
      <height>18</height>
     </rect>
    </property>
@@ -158,6 +158,62 @@
     </property>
    </item>
   </widget>
+  <widget class="betterSlider" name="horizontalSliderTestSl">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>320</y>
+     <width>160</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelTestSl">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>320</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditTextSl">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>350</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBoxSBN">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>390</y>
+     <width>42</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="doubleSpinBoxSBD">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>440</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -184,6 +240,11 @@
    <class>customStringLineEdit</class>
    <extends>QLineEdit</extends>
    <header>functions/customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>betterSlider</class>
+   <extends>QSlider</extends>
+   <header>betterSlider.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

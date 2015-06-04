@@ -22,14 +22,16 @@ import numpy as np
 import os.path as osp
 
 
-##
-# @brief application module for PyGUI
+## @brief application module for PyGUI
+# 
 class module(applicationModuleClass):
 
 	# ---------- Private ----------
 
 	def __init__(self, parent, name):
 		applicationModuleClass.__init__(self, parent, name)
+		
+		self.setDisplayName('plot engine')
 	# end __init__
 	
 	def __onPlotCurve(self):

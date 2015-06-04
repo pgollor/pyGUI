@@ -27,6 +27,8 @@ class module(applicationModuleClass):
 		applicationModuleClass.__init__(self, parent, name)
 		
 		self.__p_dialog = False
+		
+		self.setDisplayName('testPlot')
 	# end __init__
 
 	def __onPlotSample1(self):

@@ -14,15 +14,12 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
 
-import os, sys, logging
+import sys, logging
 from PyQt4.QtCore import SIGNAL, QSize, pyqtSignal
-from PyQt4.QtGui import QWidget, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QSlider,\
-	QCloseEvent
-import xml.dom.minidom as dom
-from functions.xmlHelper import readXMLRec, writeXMLRec, loadGuiChange,	setGuiSettings
+from PyQt4.QtGui import QWidget, QLineEdit, QComboBox, QCloseEvent
 from functions.delete import delete
 from functions.menu import applicationMenuButton
-from functools import partial
+from functions.helper import settingsHandler
 # try to import plotengine
 try:
 	g_plotWindowSupport = True
@@ -47,6 +44,9 @@ class abstractModuleClass(QWidget):
 	p_progressBarThread = False
 	d_modules = []
 	plotWindowSupport = g_plotWindowSupport
+	
+	## global logging level
+	loglevel = logging.WARN
 
 	# ---------- Private ----------
 	
@@ -66,7 +66,7 @@ class abstractModuleClass(QWidget):
 		
 		# add and initialize logger
 		self._p_logger = logging.getLogger(name)
-		self._p_logger.setLevel(logging.DEBUG) # set log level to debug for all modules
+		self._p_logger.setLevel(abstractModuleClass.loglevel)
 	#end __init__
 	
 	## @brief class del function
@@ -420,6 +420,8 @@ class abstractModuleClass(QWidget):
 
 
 class abstractGuiModuleClass(abstractModuleClass):
+	settingsHandle = False
+	
 	def __init__(self, *args, **kwargs):
 		abstractModuleClass.__init__(self, *args, **kwargs)
 		
@@ -431,87 +433,31 @@ class abstractGuiModuleClass(abstractModuleClass):
 		self.__l_noneGuiSpecificSettings = []
 		
 		## module display name
-		self.__v_displayName = "foo"
+		self.__v_displayName = "mod"
 		
 		## dom settings handle
-		self.__p_settingsHandle = False
+		#self.__p_settingsHandle = False
+		
+		## settings handler class
+		self.__p_settingsHandler = False
 		
 		## dom custom settings handle
-		self.__p_userSettingsHandle = False
+		#self.__p_userSettingsHandle = False
 		
 		## module settings as dict
 		self.__d_settings = dict()
 		
 		## module setting xml list
-		self.__l_settingXml = []
+		#self.__l_settingXml = []
 		
 		## module user setting xml list
-		self.__l_userSettingXml = []
+		#self.__l_userSettingXml = []
 		
 		## absolute path to icon file
 		self.__v_iconPath = False
 	# end __initVars
 	
-	## @brief load none GUI specific settings from xml
-	# @param self The object pointer.
-	# @retval boolean
-	def __loadNoneGuiSpecificSettings(self):
-		custom = self.__p_userSettingsHandle.getElementsByTagName("custom")
 
-		if (len(custom) == 0):
-			self.__l_noneGuiSpecificSettings = []
-
-			return False
-		# end if
-		
-		self.__l_noneGuiSpecificSettings = readXMLRec(custom[0])
-		
-		return True
-	# end __loadNoneGuiSpecificSettings
-	
-	## @brief create xml for custom module settings
-	# @param self The object pointer.
-	# @retval boolean
-	def __createNoneGuiSpecificSettings(self):
-		if (self.__l_noneGuiSpecificSettings == []):
-			return False
-		# end if
-		
-		custom = self.__p_userSettingsHandle.getElementsByTagName("custom")
-		
-		if (len(custom) > 0):
-			custom = custom[0]
-			custom.unlink()
-		else:
-			custom = self.__p_userSettingsHandle.createElement("custom")
-		# end if
-		
-		# create xml string from dict list
-		if (not writeXMLRec(self.__p_userSettingsHandle, custom, self.__l_noneGuiSpecificSettings)):
-			self._p_logger.critical("can't save custom settings");
-			return False
-		# end if
-		
-		return True
-	# end __createNoneGuiSpecificSettings
-	
-	def _getNoneGuiSpecificSettings(self):
-		return self.__l_noneGuiSpecificSettings
-	# end _getNoneGuiSpecificSettings
-	
-	def _setNoneGuiSpecificSettings(self, s):
-		self.__l_noneGuiSpecificSettings = s
-	# end _setNoneGuiSpecificSettings
-	
-	def _getCustomSettings(self):
-		return self._getNoneGuiSpecificSettings()
-	# end if
-	
-	def _setCustomSettings(self, s):
-		self._setNoneGuiSpecificSettings(s)
-	# end _setCustomSettings
-		
-	
 	## @brief set display name from mainWindow
 	# @param self The object pointer.
 	# @param name GUI module name
@@ -536,175 +482,108 @@ class abstractGuiModuleClass(abstractModuleClass):
 	# @param key return settings from one specific element
 	# @retval settings list
 	def _getSettings(self, key = False):
-		if (key != False and key in self.__d_settings):
-			return self.__d_settings[key]
+		# return fals if no settings handler is available
+		if (not self.__p_settingsHandler):
+			return False
+		# end if
+		
+		settings = self.__p_settingsHandler.getModuleSettings()
+		
+		if (key != False and key in settings):
+			return settings[key]
 		# end if
 			
-		return self.__d_settings
+		return settings
 	# end _getSettings
 	
-	## @brief save module settings
-	# @param self The object pointer.
-	def saveUserSettings(self):
-		self.__createNoneGuiSpecificSettings()
-		
-		# get settings handler
-		userSettings = self.__p_userSettingsHandle.getElementsByTagName("settings")[0]
-		
-		# delete all old elements
-		userSettings.unlink()
-
-		
-		defaultXmlList = self.__l_settingXml['module']['items'][0]['default_settings']['items'][0]
-		userXmlList = self.__l_userSettingXml['module']['items'][0]['settings']['items'][0]
-		
-		# search for difference between default and real current settings
-		for elemType in defaultXmlList:
-			if (elemType not in userXmlList):
-				userXmlList[elemType] = defaultXmlList[elemType]
-				continue
-			# end if
-			
-			for item in defaultXmlList[elemType]['items']:
-				# search item in current settings
-				found = False
-				
-				for currentItem in userXmlList[elemType]['items']:
-					if (item['name'] == currentItem['name']):
-						found = True
-						break
-					# end if
-				# end for
-
-				if (not found):
-					userXmlList[elemType]['items'].append(item)
-				# end if
-			# end for
-		# end for
-
-		# load last values from gui
-		loadGuiChange(userXmlList, self)
-
-		if (not writeXMLRec(self.__p_userSettingsHandle, userSettings, userXmlList)):
-			self._p_logger.critical("Can't save settings!!!");
-			return False
-		# end if
-
-		writer = open(self.getModulePath(True) + "/" + self.getName() + "_user.xml", "w", encoding='utf-8')
-		#self.__p_userSettingsHandle.writexml(writer, encoding='utf-8', newl='\n', addindent='\t', indent='') # there is a bug in writexml
-		self.__p_userSettingsHandle.writexml(writer, encoding='utf-8')
-		writer.close()
-	# end saveUserSettings
-
-	## @brief load custom module settings
-	# @param self The object pointer.
-	def loadUserSettings(self):
-		# before we are load the user settings, we have to load the default settings if some custom settings are not exists
-		self.loadSettings()
-		
-		modulePath = self.getModulePath(True)
-		fileName = self.getName() + "_user.xml"
-		filePath = modulePath + "/" + fileName
-		
-		# Falls die Datei nicht vorhanden ist, wird sie erstellt.
-		if (fileName in os.listdir(modulePath)):
-			self.__p_userSettingsHandle = dom.parse(filePath)
-		else:
-			self.__p_userSettingsHandle = dom.parseString("<module><settings></settings><custom></custom></module>")
-		# end if
-
-		# parse xml structure into a list		
-		self.__l_userSettingXml = readXMLRec(self.__p_userSettingsHandle)
-
-		# load none GUI specific settings
-		self.__loadNoneGuiSpecificSettings()
-		
-		elems = setGuiSettings(self.__l_userSettingXml['module']['items'][0]['settings']['items'][0], self)
-		
-		# update settings dict
-		self.__updateSettings(elems)
-	# end loadUserSettings
+	def _setSettings(self, key, value):
+		return self.__p_settingsHandler.setModuleSettings(key, value)
+	# end _setSettings
 	
-	## @brief load default module settings
+	## @brief same as _getSettings
+	# @param self The object pointer.
+	# @param key return settings from one specific element
+	# @retval settings list
+	def getSettings(self, key = False):
+		return self._getSettings(key)
+	# end getSettings
+	
+	## @brief handle settings on first time
+	# @param self The object pointer.
+	def handleSettings(self):
+		abstractGuiModuleClass.settingsHandle.beginGroup('module_settings')
+		savedSettings = abstractGuiModuleClass.settingsHandle.value(self.getName())
+		abstractGuiModuleClass.settingsHandle.endGroup()
+		
+		if (savedSettings == None):
+			savedSettings = dict()
+		# end if
+		
+		self.__p_settingsHandler = settingsHandler(self, savedSettings)
+	# end handleSettings
+	
+	## @brief load user settings from global QSettings struct an store it into GUI elements
 	# @param self The object pointer.
 	def loadSettings(self):
-		self.__p_settingsHandle = dom.parse(self.getModulePath(True) + "/" + self.getName() + ".xml")
-		self.__l_settingXml = readXMLRec(self.__p_settingsHandle)
-		
-		moduleNode = self.__l_settingXml['module']['items'][0]
-		mainNode = moduleNode['main']['items'][0]
-
-		# get display name
-		displayName = ''
-		if ('displayname' not in mainNode):
-			self._p_logger.critical("No Attribute displayname was found in xml file!!!")
-
-			return False
-		else:
-			displayName = mainNode['displayname']['content']
+		if (not self.__p_settingsHandler):
+			return
 		# end if
-		self.__v_displayName = displayName
 		
-		# if an icon is given in xml then load the relative path to icon filename
-		# the filename endign have to be a file with is supportet by qimagereader from qt
-		iconPath = False
-		if ('icon' in mainNode):
-			iconPath = mainNode['icon']['content']
-			if (os.path.isfile(self.getModulePath(True) + '/' + iconPath)):
-				iconPath = self.getModulePath(True) + '/' + iconPath
-			else:
-				iconPath = False
-			# end if 
+		abstractGuiModuleClass.settingsHandle.beginGroup('module_settings')
+		savedSettings = abstractGuiModuleClass.settingsHandle.value(self.getName())
+		abstractGuiModuleClass.settingsHandle.endGroup()
+		
+		if (savedSettings == None):
+			return
 		# end if
-		self.__v_iconPath = iconPath
 
-
-		# save settings from gui elements
-		xmlList = moduleNode['default_settings']['items'][0]
-		elems = setGuiSettings(xmlList, self)
-
-		# connect elements
-		for elemClass in elems:
-			for elem in elems[elemClass]:
-				sig = False
-				
-				# get elem name withe elem class
-				[elemName, elemClassName] = self.__getNameFromElem(elem)
-
-				if (elemClass == 'textedit'):
-					sig = SIGNAL('textChanged()')
-					dest = partial(self.__onTextEditChanged, elemName, elem['handle'])
-				elif (elemClass == 'lineedit'):
-					sig = SIGNAL('validChange(PyQt_PyObject, PyQt_PyObject)')
-					dest = self.__onValidChange
-				elif (elemClass in ['checkbox', 'groupbox']):
-					sig = SIGNAL('clicked(bool)')
-					dest = partial(self.__onValidChange, elemName)
-				elif (elemClass == 'radiobutton'):
-					sig = SIGNAL('toggled(bool)')
-					dest = partial(self.__onValidChange, elemName)
-				elif (elemClass == 'betterslider'):
-					sig = SIGNAL('changed(PyQt_PyObject)')
-					dest = partial(self.__onValidChange, elemName)
-				elif (elemClass == 'combobox'):
-					sig = SIGNAL('currentIndexChanged(int)')
-					dest = partial(self.__onComboBoxValidChange, elemName, elem['handle'])
-				elif (elemClass == 'spinbox'):
-					sig = SIGNAL("valueChanged(int)")
-					dest = partial(self.__onSpinBoxValidChange, elemName, elem['handle'])
-				# end if
-				
-				if (sig):
-					self.disconnect(elem['handle'], sig, dest)
-					self.connect(elem['handle'], sig, dest)
-				# end if
-			# end for
-		# end for
+		self.__p_settingsHandler.load(savedSettings)
+	# end laodSettings
+	
+	## @brief delete all settings
+	# @param self The object pointer.
+	def deleteSettings(self):
+		self.__p_settingsHandler.delete()
 		
-		# update settings dict
-		self.__d_settings = dict()
-		self.__updateSettings(elems)
-	# end loadSettings
+		self.__p_settingsHandler.loadDefault()
+	# end deleteSettings
+	
+	## @brief load default settings from module an store it into GUI elements
+	# @param self The object pointer.
+	def loadDefaultSettings(self):
+		if (not self.__p_settingsHandler):
+			return
+		# end if
+
+		self.__p_settingsHandler.loadDefault()
+	# end loadDefaultSettings
+	
+	## @brief save settings into global QSettings struct
+	# @param self The object pointer.
+	def saveSettings(self):
+		if (not self.__p_settingsHandler):
+			return
+		# end if
+		
+		settings = self.__p_settingsHandler.getSaveSettings()
+		
+		abstractGuiModuleClass.settingsHandle.beginGroup('module_settings')
+		abstractGuiModuleClass.settingsHandle.setValue(self.getName(), settings)
+		abstractGuiModuleClass.settingsHandle.endGroup()
+	# end saveSettings
+		
+
+	## @brief virtual dummy function
+	# @param self The object pointer.
+	# @return return default settings dict
+	#
+	# dict construct ist:
+	# d = {"variable name": {"qName": "[Qt Elment Name]", "value": "[Element Inhalt]"}}
+	# 
+	# @n qName can be none for none GUI elements
+	def getDefaultSettings(self):
+		return {}
+	# end getDefaultSettings
 	
 	def __getNameFromElem(self, elem):
 		objClass = type(elem['handle'])
@@ -732,79 +611,7 @@ class abstractGuiModuleClass(abstractModuleClass):
 		
 		return [objName, elemClassName]
 	# end __getNameFromElem
-	
-	def __onComboBoxValidChange(self, elemName, elem, index):
-		self.__d_settings[elemName] = elem.currentText()
-	# end
-	
-	def __onSpinBoxValidChange(self, elemName, elem, index):
-		self.__d_settings[elemName] = elem.value()
-	# end
-			
-	def __onValidChange(self, elemName, elemValue):
-		self.__d_settings[elemName] = elemValue
-	# end __onValidChange
-	
-	def __onTextEditChanged(self, elemName, elemHandle):
-		# debug putput
-		#print('========== SIGNAL ==========')
-		#print(elemName)
-		#print(elemHandle)
-		#print(elemHandle.metaObject().className())
-		#print(elemHandle.toPlainText())
-		#print(elemHandle.toHtml())
-		#print('========== SIGNAL ==========')
-		
-		self.__d_settings[elemName] = elemHandle.toPlainText()
-	# end __onTextEditChanged
-	
-	# update __d_settings dict with gui elements are used in xml file
-	def __updateSettings(self, elems):
-		# theses are the supported elements
-		#textElems = [customGuiElements.customIntegerLineEdit, customGuiElements.customFloatLineEdit, customGuiElements.customStringLineEdit, customGuiElements.customListLineEdit, QLineEdit, QLabel]
-		textElems = ['LineEdit', 'Label']
-		textEditElems = ['TextEdit', 'PlainTextEdit']
-		boolElems = ['CheckBox', 'RadioButton', 'GroupBox']
-		#listElems = [customGuiElements.customIntegerComboBox, customGuiElements.customFloatComboBox, QComboBox]
-		valueElems = [QSpinBox, QDoubleSpinBox]
-		
-		# check if element is supported
-		for elemClass in elems:
-			for elem in elems[elemClass]:
-				objClass = type(elem['handle'])
 
-				# get elem name
-				[elemName, elemClassName] = self.__getNameFromElem(elem)
-				
-				#print(elemName)
-				#print(elemClassName)
-				#print()
-				
-				#if (classEqual(objClass, textElems)):
-				if (elemClassName in textElems):
-					self.__d_settings[elemName] = elem['handle'].text()
-				elif (elemClassName in textEditElems):
-					self.__onTextEditChanged(elemName, elem['handle'])
-				elif (elemClassName in boolElems):
-					if (elem['handle'].isCheckable()):
-						self.__d_settings[elemName] = elem['handle'].isChecked()
-					# end if
-				elif (objClass in valueElems):
-					self.__d_settings[elemName] = elem['handle'].value()
-				#elif (objClass in listElems):
-				elif (elemClassName == 'ComboBox'):
-					self.__d_settings[elemName] = elem['handle'].currentText()
-				elif (issubclass(objClass, QSlider)):
-					functions = dir(elem['handle'])
-					if ('editedValue' in functions):
-						self.__d_settings[elem['name']]= elem['handle'].editedValue()
-					else:
-						self.__d_settings[elem['name']]= elem['handle'].value()
-					# end if
-				# end if
-			# end for
-		# end for
-	# end __updateSettings
 	
 	## @brief virtual function: initialize function before settings were loaded
 	# @param self The object pointer.

@@ -29,6 +29,8 @@ class module(applicationModuleClass):
 		applicationModuleClass.__init__(self, parent, name)
 		
 		self.__initVars()
+		
+		self.setDisplayName('testImageResize')
 	# end __init__
 	
 	def __initVars(self):

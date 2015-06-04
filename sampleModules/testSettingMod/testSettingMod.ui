@@ -26,20 +26,7 @@
     <string>PushButton</string>
    </property>
   </widget>
-  <widget class="QLabel" name="labelFoo">
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>70</y>
-     <width>221</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>bar</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButton_1">
+  <widget class="QRadioButton" name="radioButtonRB1">
    <property name="geometry">
     <rect>
      <x>90</x>
@@ -65,7 +52,7 @@
     <string>CheckBox</string>
    </property>
   </widget>
-  <widget class="QRadioButton" name="radioButton_2">
+  <widget class="QRadioButton" name="radioButtonRB2">
    <property name="geometry">
     <rect>
      <x>90</x>
@@ -76,6 +63,19 @@
    </property>
    <property name="text">
     <string>RadioButton2</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditFoo">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>70</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>bar</string>
    </property>
   </widget>
  </widget>

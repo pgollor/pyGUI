@@ -62,11 +62,11 @@ target/
 .spyderproject
 
 # project specific
-modules/*
+/modules/*
+/modules/.*
 *.bak
-modules.xml
+*.xml
 /doc/html
-/doc/index.chm
-/userSettings.xml
+/userSettings.ini
 /dlls
 /include

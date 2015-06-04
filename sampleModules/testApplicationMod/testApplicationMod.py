@@ -13,36 +13,43 @@
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 # 
-# @brief This is a tiny demo application module.
 #
-# <pre>
-# required functions:
-# 	__init__(self, parent, name):
-# 		settingModuleClass.__init__(self, parent, name)
+# @defgroup testApplicationMod
 # 
-# 	initGUI(self)
+# @brief This is a tiny sample application module.
 # 
-# optional functions:
-# 	initPreSettings(self)
-# 	initModule(self)
-# 	initGui(self)
-# 	onClose(self)
-# 	onActive(self)
-# 	onInactive(self)
+# @section app-mod Application Module
+#
+# @subsection req-func Required functions:
+# -	<pre>__init__(self, parent, name):
+#  applicationModuleClass.__init__(self, parent, name)
+#
+#  self.setDisplayName('testApplication')</pre>
 # 
+# @subsection opt-func Optional functions:
+# - initPreSettings(self)
+# - initModule(self)
+# - initGui(self)
+# - onClose(self)
+# - onActive(self)
+# - onInactive(self)
+# - onInactive(self)
+# - getDefaultSettings(self)
+#
+# @subsection add-infos Additional information: 
 # - You can load other module handles by self._getModuleArray()
 # - You can get other files by self.getIncludes()
-# - You can get global progress bar by self.p_progressBar
+# - You can get global progress bar by self._getProgressBar()
 # - You can get values from GUI elements. The GUI elements have to be located in xml file. self._getSettings([name])
 #
-# If you need other modules you have to add this module to a global variable as list like:
+# If you need other modules you have to add this module to a global list like:
 # dependencies = ["testSettingMod"]
 #
-# Module icon:
-# specify the icon for menu button by using the following line in initGui function:
-# self.getMenuButton().setIcon(QIcon(self.getModulePath(True) + '/joystick8.svg'))
-# Or you can add <icon>relative path</icon> to the main node from modulename.xml
-# </pre>
+# @subsection mod-icon Module icon:
+# Specify the icon for menu button by using the following line in initGui function:
+# <pre>self.getMenuButton().setIcon(QIcon(self.getModulePath(True) + '/joystick8.svg'))</pre>
+#
+# @{
 
 from abstractModuleClass import applicationModuleClass
 
@@ -55,14 +62,21 @@ class module(applicationModuleClass):
 
 	def __init__(self, parent, name):
 		applicationModuleClass.__init__(self, parent, name)
+		
+		self.setDisplayName('testApplication')
 	# end __init__
 
+	## @brief Qt slot which is connected to pushButton.
+	# @param self The object pointer.
+	# 
+	# This function generates some logger output to show how to use the python logger.
 	def __onPushButton(self):
 		self._p_logger.debug('debug test')
 		self._p_logger.info('info test')
 		self._p_logger.warning('warning test')
 		self._p_logger.error('error test')
 		self._p_logger.critical('critial test')
+
 		self.label.setText("push button were pressed")
 	# end __onPushButton
 
@@ -70,11 +84,20 @@ class module(applicationModuleClass):
 
 
 	# ---------- overrided functions ----------
+	
+	## @brief return default settings
+	# @param self The object pointer.
+	# @return settings dict
+	def getDefaultSettings(self):
+		d = {"label": {"qName": "label", "value": "default text from ini"}}
+		
+		return d
+	# end getDefaultSettings
 
-	def initModule(self):
-		applicationModuleClass.initModule(self)
-	#end _initModule
-
+	## @brief Function to initialize the GUI
+	# @param self The object pointer.
+	# 
+	# In this function you have to connect all Qt elements and so on.
 	def initGUI(self):
 		self.pushButton.clicked.connect(self.__onPushButton)
 		
@@ -84,3 +107,5 @@ class module(applicationModuleClass):
 	# ---------- overrided functions ----------
 
 # end class module
+
+## @}

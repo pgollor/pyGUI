@@ -14,7 +14,7 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
 
-from PyQt4.QtCore import SIGNAL, QRect, Qt, QPoint
+from PyQt4.QtCore import QRect, Qt, QPoint, pyqtSignal
 from PyQt4.QtGui import QDialog, QDesktopWidget, QWidget, QMainWindow, QVBoxLayout,\
 	QCheckBox
 
@@ -24,9 +24,8 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 
 
 class QWidgetSignals(QWidget):
-	
-	#onClose = pyqtSignal(name="onClose")
-	#onShow = pyqtSignal(name="onShow")
+	onShow = pyqtSignal()
+	onClose = pyqtSignal()
 	
 	def __init__(self, parent = False):
 		QWidget.__init__(self, parent)
@@ -67,14 +66,14 @@ class QWidgetSignals(QWidget):
 	
 	def _onCloseEvent(self):
 		# emit signal
-		self.emit(SIGNAL("onClose()"))
-		#self.onClose.emit()
+		#self.emit(SIGNAL("onClose()"))
+		self.onClose.emit()
 	# end _oncliseEvent
 	
 	def _onShowEvent(self):
 		# emit signal	
-		self.emit(SIGNAL("onShow()"))
-		#self.onShow.emit()
+		#self.emit(SIGNAL("onShow()"))
+		self.onShow.emit()
 	# end _onShowEvent
 		
 # end class QWidgetSignals
@@ -118,6 +117,9 @@ class externQWidget(QWidget):
 
 
 class QMainWindowSignals(QMainWindow, QWidgetSignals):
+	onShow = pyqtSignal()
+	onClose = pyqtSignal()
+	
 	def __init__(self, parent = None):
 		QMainWindow.__init__(self, parent)
 		super(QWidgetSignals, self).__init__(self)
@@ -139,6 +141,8 @@ class QMainWindowSignals(QMainWindow, QWidgetSignals):
 
 
 class QDialogSignals(QDialog):
+	onShow = pyqtSignal()
+	onClose = pyqtSignal()
 	
 	def __init__(self, parent = None):
 		QDialog.__init__(self, parent)
@@ -166,7 +170,8 @@ class QDialogSignals(QDialog):
 	
 	def showEvent(self, event):
 		# emit signal	
-		self.emit(SIGNAL("onShow()"))
+		#self.emit(SIGNAL("onShow()"))
+		self.onShow.emit()
 		
 		# accept event	
 		event.accept()
@@ -174,7 +179,8 @@ class QDialogSignals(QDialog):
 	
 	def closeEvent(self, event):
 		# emit signal
-		self.emit(SIGNAL("onClose()"))
+		#self.emit(SIGNAL("onClose()"))
+		self.onClose.emit()
 		
 		# accept event
 		event.accept()
