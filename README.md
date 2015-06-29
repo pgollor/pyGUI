@@ -11,7 +11,7 @@ Im Rahmen einer Dissertation entstand als Nebenprodukt eine Software-Umgebung um
 Darüber hinaus möchte ich um Verständnis werben, dass aus verständlichen Gründen nur die GUI an sich und keinerlei Messabläufe, Algorithmen oder Hardwareschnittstellen in der pyGUI enthalten sind.
 
 ### Installing
-* install winPython 3.4.xx or python3-spyderlib
+* install winPython 3.4.3.x or python3-spyderlib
 ```
 $ git clone https://github.com/pgollor/pyGUI.git
 $ cd pyGUI
