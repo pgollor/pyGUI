@@ -16,8 +16,8 @@
 # @brief menu buttons for main window tool bar
 
 
-from PyQt4.QtGui import QToolButton, QIcon, QWidget, QToolBar
-from PyQt4.QtCore import Qt, QSize, pyqtSignal
+from PyQt4.QtGui import QToolButton, QIcon, QToolBar
+from PyQt4.QtCore import Qt, QSize, pyqtSignal, QObject
 
 
 class menuButton(QToolButton):	
@@ -34,11 +34,7 @@ class menuButton(QToolButton):
 		# make button checkable. this is required for css functions like checked ...
 		self.setCheckable(True)
 	# end __init__
-	
-	def __del__(self):
-		pass
-	# end __del__
-	
+
 	def setText(self, text):
 		text = str(text)
 		
@@ -64,8 +60,8 @@ class menuButton(QToolButton):
 
 
 class applicationMenuButton(menuButton):
-	clicked = pyqtSignal(QWidget)
-	doubleClicked = pyqtSignal(QWidget)
+	clicked = pyqtSignal(QObject)
+	doubleClicked = pyqtSignal(QObject)
 	
 	def __init__(self, module, *args, **kwargs):
 		menuButton.__init__(self, *args, **kwargs)
@@ -73,7 +69,7 @@ class applicationMenuButton(menuButton):
 		# set global variables
 		self.__p_module = module
 		
-		## init menu button style
+		# init menu button style
 		# add standard icon
 		self.setIcon(QIcon(module.getParentPath() + '/icons/computer200.svg'))
 		self.setIconSize(QSize(32,32))
@@ -89,54 +85,19 @@ class applicationMenuButton(menuButton):
 
 	def __del__(self):
 		if (self.__p_module):
-			del(self.__p_module)
 			self.__p_module = False
 		# end if
-		
-		menuButton.__del__(self)
 	# end __del__
 	
 	def __onClick(self):
-		self.clicked[QWidget].emit(self.__p_module)
+		self.clicked[QObject].emit(self.__p_module)
 	# end __onClick
 	
 	def mouseDoubleClickEvent(self, event):
-		self.doubleClicked.emit(self.__p_module)
+		self.doubleClicked[QObject].emit(self.__p_module)
 		
 		return menuButton.mouseDoubleClickEvent(self, event)
 	# end mouseDoubleClickEvent
-
-	"""
-	def mouseMoveEvent(self, event):
-		if (event.buttons() != Qt.LeftButton):
-			return menuButton.mouseMoveEvent(self, event)
-		# end if
-		
-		# create mime data and drag object
-		mimeData = QMimeData()
-		drag = QDrag(self)
-
-		# set mime data		
-		mimeData.setText(self.__p_module.getName())
-		drag.setMimeData(mimeData)
-		
-		# set button icon as pixmap
-		drag.setPixmap(self.icon().pixmap(self.iconSize()))
-		
-		# Position an der sich der Mauszeiger befinden soll
-		m = self.iconSize().width() / 2
-		drag.setHotSpot(QPoint(m, m))
-
-		dropAction = drag.start(Qt.CopyAction)
-		if (dropAction != Qt.CopyAction):
-			self.setAutoExclusive(False)
-			self.setChecked(False)
-			self.setAutoExclusive(True)
-		# end if
-		
-		return menuButton.mouseMoveEvent(self, event)
-	# end mouseMoveEvent
-	"""	
 	
 # end class applicationMenuButton
 

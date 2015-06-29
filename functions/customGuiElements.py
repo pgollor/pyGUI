@@ -1,14 +1,48 @@
-from PyQt4.QtGui import QLineEdit, QIntValidator, QValidator,\
-	QDoubleValidator, QComboBox, QMessageBox
 
-from PyQt4.QtCore import Qt, SIGNAL, QLocale
+
+
+##
+# @file customGuiElements.py
+# 
+# @date unknown
+# @author Stanislav Tereschenko
+# @author Pascal Gollor (http://www.pgollor.de/cms/)
+# 
+# @copyright Dieses Projekt ist lizensiert als Inhalt der
+# Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 3.0 Unported-Lizenz.<br>
+# Um eine Kopie der Lizenz zu sehen, besuchen Sie http://creativecommons.org/licenses/by-sa/3.0/.<br>
+# -- englisch version --<br>
+# This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Germany License.<br>
+# To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
+# Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+#
+# @defgroup custom_gui_elements custom Qt GUI elements
+# @{
+#
+# @brief custom Qt GUI elements
+#
+# This classes are all children's from Qt Elements like lineEdit, comboBox, slider or so and provides some
+# better and user friendlier functions. 
+# 
+
+
+
+from PyQt4.QtGui import QLineEdit, QIntValidator, QValidator,\
+	QDoubleValidator, QComboBox, QMessageBox, QSlider, QLabel
+from PyQt4.QtCore import Qt, QLocale, pyqtSlot
+from PyQt4.Qt import pyqtSignal
+from functools import partial
+import numpy as np
 
 QLocale.setDefault(QLocale(QLocale.English,QLocale.UnitedStates))
+
 
 class abstractCustomLineEdit(QLineEdit):
 	INTEGER = 0
 	FLOAT = 1
 	LIST = 2
+	
+	# signals
 	
 	def __init__(self, *args, **kwargs):
 		QLineEdit.__init__(self, *args, **kwargs)
@@ -44,7 +78,17 @@ class abstractCustomLineEdit(QLineEdit):
 	
 	def _change(self, value):
 		if (str(value) != self.__v_lastValue):
-			self.emit(SIGNAL('validChange(PyQt_PyObject, PyQt_PyObject)'), self.getClassName(), value)
+			#self.emit(SIGNAL('validChange(PyQt_PyObject, PyQt_PyObject)'), self.getClassName(), value)
+			
+			#self.__sig_validChange.emit(self.getClassName(), value)
+			if (self.__v_type == 0):
+				self.validChange[str, int].emit(self.getClassName(), value)
+			elif (self.__v_type == 1):
+				self.validChange[str, float].emit(self.getClassName(), value)
+			else:
+				self.validChange[str, str].emit(self.getClassName(), value)
+			# end if
+			
 			self.__clearMessage()
 			self.__v_lastValue = str(value)
 		# end if
@@ -64,7 +108,8 @@ class abstractCustomLineEdit(QLineEdit):
 			self.setToolTip(msg)
 			
 			if (quiet):
-				print(msg)
+				pass
+				#print(msg)
 			else:
 				QMessageBox.critical(None, 'Error', msg)
 			# end if
@@ -88,6 +133,8 @@ class abstractCustomLineEdit(QLineEdit):
 
 
 class customStringLineEdit(abstractCustomLineEdit):
+	validChange = pyqtSignal(str, str)
+	
 	def __init__(self, *args, **kwargs):
 		abstractCustomLineEdit.__init__(self, *args, **kwargs)
 	# end __init__
@@ -163,6 +210,8 @@ class abstractCustomMinMaxLineEdit(abstractCustomLineEdit):
 
 
 class customIntegerLineEdit(abstractCustomMinMaxLineEdit):
+	validChange = pyqtSignal(str, int)
+	
 	def __init__(self, *args, **kwargs):
 		abstractCustomMinMaxLineEdit.__init__(self, *args, **kwargs)
 		
@@ -171,13 +220,13 @@ class customIntegerLineEdit(abstractCustomMinMaxLineEdit):
 		self.setValidator(QIntValidator())
 	# end __init__
 	
-	def __check(self, value='', quiet=False):
+	def __check(self, value='', quiet = False):
 		if (value == ''):
 			value = self.text()
 		# end if
 		
 		if (self.validator().validate(str(value), 0)[0] != QValidator.Acceptable):
-			msg = 'Input has to be an integer'
+			msg = "GUI element \"" + self.objectName() + "\" has to be an integer"
 
 			if (self.isMinMax()):
 				msg += ' between ' + str(self.min()) + ' and ' + str(self.max())
@@ -253,6 +302,8 @@ class customIntegerLineEdit(abstractCustomMinMaxLineEdit):
 # end class customIntegerLineEdit
 
 class customFloatLineEdit(abstractCustomMinMaxLineEdit):
+	validChange = pyqtSignal(str, float)
+	
 	def __init__(self, *args, **kwargs):
 		abstractCustomMinMaxLineEdit.__init__(self, *args, **kwargs)
 		
@@ -268,7 +319,7 @@ class customFloatLineEdit(abstractCustomMinMaxLineEdit):
 		# end if
 		
 		if (self.validator().validate(str(value), 0)[0] != QValidator.Acceptable):
-			msg = 'Input has to be a float'
+			msg = "GUI element \"" + self.objectName() + "\" has to be a float"
 
 			if (self.isMinMax()):
 				msg += ' between ' + str(self.min()) + ' and ' + str(self.max())
@@ -340,6 +391,8 @@ class customFloatLineEdit(abstractCustomMinMaxLineEdit):
 # end class customFloatLineEdit
 
 class customListLineEdit(abstractCustomLineEdit):
+	validChange = pyqtSignal(str, str)
+	
 	def __init__(self, *args, **kwargs):
 		abstractCustomLineEdit.__init__(self, *args, **kwargs)
 		
@@ -461,3 +514,506 @@ class customFloatComboBox(abstractCustomComboBox):
 	
 # end class customFloatComboBox
 
+
+# ---------- slider ----------
+# ----------   \/   ----------
+
+
+## custom abstract slider
+# It is a QSlider with some more user friendly functions.
+# You can use the abstractSlider not directly. Please use customIntegerSlider, customFloatSlider oder customLogarithmSlider.
+class CustomAbstractSlider(QSlider):
+	INTEGER = 0
+	FLOAT = 1
+	LOGARITHM = 2
+	
+	## value changed signal
+	sigChanged = pyqtSignal()
+	
+	## initial class function
+	# @param self The object pointer.
+	# @param sliderType Slider type (integer, float or logarithm).
+	# @param *args arguments as list
+	# @param **kwargs arguments as dict
+	def __init__(self, sliderType, *args, **kwargs):
+		QSlider.__init__(self, *args, **kwargs)
+		
+		# set slider type
+		self.__v_type = sliderType
+		
+		self.__l_connectedItems = list()
+		self.__v_ndigits = 2
+		self.__v_lastVal = 0
+		
+		self._v_step = 1
+		self._v_minVal = 0
+		self._v_maxVal = 0
+		
+		# default no tracking
+		self.setTracking(False)
+		
+		# connect signals
+		self.valueChanged.connect(self._onValueChange)
+	# end __init__
+	
+	@pyqtSlot(int)
+	def _onValueChange(self, value = -1):
+		# get value from child class
+		value = self.value()
+		
+		# do nothing if value do not changed
+		if (self.__v_lastVal == value):
+			return
+		# end if
+		self.__v_lastVal = value
+		
+		# show rounded value to all connectet items
+		for item in self.__l_connectedItems:
+			item.setText(str(round(value, self.__v_ndigits)))
+		# end for
+		
+		# emit change signal in child class
+		self._emitChange()
+	# end _onValueChange 
+	
+	@pyqtSlot(str)
+	def __onItemChange(self, lineEdit):
+		self.setValue(lineEdit.text())
+		
+		# show rounded value to all connectet items
+		value = self.value()
+		for item in self.__l_connectedItems:
+			item.setText(str(round(value, self.__v_ndigits)))
+		# end for
+
+		#value = float(lineEdit.text())
+		#value = self.setEditedValue(value)
+
+		#if (self.__v_lastValue != value):
+		#	#self.emit(SIGNAL("changed(PyQt_PyObject)"), value)
+		#	if (self.__v_double):
+		#		self.changed[float].emit(value)
+		#	else:
+		#		self.changed[int].emit(value)
+		#	# end if
+		#	self.__v_lastValue = value
+		# end if
+	# end __onItemChange
+	
+	## connect qt elements 
+	def __connectItem(self, item):
+		# do not connect if is already a connected element
+		if (item in self.__l_connectedItems):
+			return False
+		# end if
+		
+		self.__l_connectedItems.append(item)
+		val = self.value()
+		
+		# add rounded value
+		item.setText(str(round(val, self.__v_ndigits)))
+		
+		return True
+	# end __connectItem
+	
+	## disconnect qt elements
+	def __disconnectItem(self, item):
+		if (item not in self.__l_connectedItems):
+			return False
+		# end if
+		
+		self.__l_connectedItems.remove(item)
+		
+		return True
+	# end __disconnectItem
+	
+	
+	# ------------------- #
+	# protected functions #
+	# --------\/--------- #
+	
+	## emit the change signal
+	# @param self The object pointer.
+	def _emitChange(self):
+		pass
+	# end _emitChange
+	
+	def _checkMinMax(self, value):
+		if (value < self._v_minVal):
+			value = self._v_minVal
+		# end if
+		
+		if (value > self._v_maxVal):
+			value = self._v_maxVal
+		# end if
+		
+		return value
+	# end _checkMinMax
+	
+	# --------/\--------- #
+	# protected functions #
+	# ------------------- #
+
+	def setRange(self, minVal, maxVal):
+		self.setMinimum(minVal)
+		self.setMaximum(maxVal)
+	# end setRange
+	
+	def setValue(self, value):
+		QSlider.setValue(self, value)
+		
+		self._onValueChange()
+		
+		return True
+	# end setValue
+
+	def minimum(self):
+		return self._v_minVal
+	# end minimum
+	
+	def maximum(self):
+		return self._v_maxVal
+	# end maximum
+
+	
+	# ------------------- #
+	# interface functions #
+	# --------\/--------- #
+	
+	
+	## Initialize slider
+	# @param self The object pointer.
+	# @param minVal Minimum value.
+	# @param maxVal Maximum value.
+	# @param step Step. Default 1.
+	# @param pageStep Page step. Default 10.
+	def init(self, minVal, maxVal, step = 1, pageStep = 10):
+		self.setSingleStep(step)
+		self.setPageStep(pageStep)
+		self.setRange(minVal, maxVal)
+	# end init
+	
+
+	## get slider type as int or string
+	# @param self The object pointer.
+	# @param asString boolean for choosing return format
+	# @return slider type
+	def getSliderType(self, asString = False):
+		if (asString):
+			if (self.__v_type == CustomAbstractSlider.INTEGER):
+				return "integer"
+			elif (self.__v_type == CustomAbstractSlider.FLOAT):
+				return "float"
+			elif (self.__v_type == CustomAbstractSlider.LOGARITHM):
+				return "logarithm"
+			# end if
+		# end if
+		
+		return self.__v_type
+	# end getSliderType
+		
+	## connect QLabel with this slider
+	# @param self The object pointer.
+	# @param label The QLabel object pointer.
+	# @return return True or False
+	def connectLabel(self, label):
+		return self.__connectItem(label)
+	# end connectLabel
+	
+	## connect QLineEdit with this slider
+	# @param self The object pointer.
+	# @param lineEdit The QLineEdit object pointer.
+	# @return True or False
+	def connectLineEdit(self, lineEdit):
+		if (not self.__connectItem(lineEdit)):
+			return False
+		# end if
+		
+		# connect signal for line edit
+		lineEdit.returnPressed.connect(partial(self.__onItemChange, lineEdit))
+		
+		return True
+	# end connectLineEdit
+	
+	## connect a QT Element with this slider
+	# @param self The object pointer.
+	# @param elem Qt object pointer from QLineEdit oder QLabel
+	# @return return True or False
+	def connectElem(self, elem):
+		if (type(elem) == QLabel):
+			self.connectLabel(elem)
+		elif (type(elem) == QLineEdit):
+			self.connectLineEdit(elem)
+		else:
+			return False
+		# end if
+		
+		return True
+	# end connectElem
+	
+	## disconnect QLabel
+	# @param self The object pointer.
+	# @param label The QLabel object pointer.
+	# @return return True or False
+	def disconnectLabel(self, label):
+		return self.__disconnectItem(label)
+	# end disconnectLabel
+	
+	## disconnect QLineEdit
+	# @param self The object pointer.
+	# @param lineEdit The QLineEdit object pointer.
+	# @return True or False
+	def disconnectLineEdit(self, lineEdit):
+		return self.__disconnectItem(lineEdit)
+	# end disconnectLabel
+	
+
+	## get list with all connected items
+	# @param self The object pointer.
+	# @return object pointer list 
+	def getConnectedItems(self):
+		return self.__l_connectedItems
+	# end getConnectedLabels
+	
+	
+# end class AbstractBetterSlider
+
+
+## custom integer slider
+class customIntegerSlider(CustomAbstractSlider):
+	sigChanged = pyqtSignal(int)
+	
+	## initial class function
+	# @param self The object pointer.
+	# @param *args arguments as list
+	# @param **kwargs arguments as dict
+	def __init__(self, *args, **kwargs):
+		CustomAbstractSlider.__init__(self, CustomAbstractSlider.INTEGER, *args, **kwargs)
+	# end __init
+	
+	def _emitChange(self):
+		value = self.value()
+		self.sigChanged[int].emit(value)
+	# end _emitChange
+	
+	def setSingleStep(self, singleStep):
+		self._v_step = singleStep
+		
+		return CustomAbstractSlider.setSingleStep(self, 1)
+	# end setSingleStep
+	
+	def setMinimum(self, minVal):
+		self._v_minVal = int(minVal)
+		
+		return CustomAbstractSlider.setMinimum(self, 0)
+	# end setMaximum
+		
+	def setMaximum(self, maxVal):
+		self._v_maxVal = int(maxVal)
+		
+		steps = int(round((self._v_maxVal - self._v_minVal) / self._v_step + 1))
+		
+		return CustomAbstractSlider.setMaximum(self, steps - 1)
+	# end setMaximum
+	
+	def value(self):
+		pos = CustomAbstractSlider.value(self)
+		
+		customVal = int(self._v_minVal + pos * self._v_step)
+		
+		return customVal
+	# end value
+	
+	@pyqtSlot(int)
+	def setValue(self, value):
+		value = self._checkMinMax(int(value))
+		
+		# calculate slider position
+		pos = int(round((int(value) - self._v_minVal) / self._v_step, 0))
+		
+		CustomAbstractSlider.setValue(self, pos)
+		
+		return value
+	# end setValue
+	
+# end class
+
+
+## custom float slider
+class customFloatSlider(CustomAbstractSlider):
+	sigChanged = pyqtSignal(float)
+	
+	## initial class function
+	# @param self The object pointer.
+	# @param *args arguments as list
+	# @param **kwargs arguments as dict
+	def __init__(self, *args, **kwargs):
+		CustomAbstractSlider.__init__(self, CustomAbstractSlider.FLOAT, *args, **kwargs)
+	# end __init
+	
+	def _emitChange(self):
+		value = self.value()
+		self.sigChanged[float].emit(value)
+	# end _emitChange
+
+	# -------------------- #
+	# overloaded functions #
+	# ---------\/--------- #
+	
+	def setSingleStep(self, singleStep):
+		self._v_step = singleStep
+		
+		return CustomAbstractSlider.setSingleStep(self, 1)
+	# end setSingleStep
+	
+	def setMinimum(self, minVal):
+		self._v_minVal = float(minVal)
+		
+		return CustomAbstractSlider.setMinimum(self, 0)
+	# end setMaximum
+		
+	def setMaximum(self, maxVal):
+		self._v_maxVal = float(maxVal)
+		
+		steps = int(round((self._v_maxVal - self._v_minVal) / self._v_step + 1))
+		
+		return CustomAbstractSlider.setMaximum(self, steps - 1)
+	# end setMaximum
+	
+	## returns custom value and overload original function
+	# @param self The object pointer.
+	def value(self):
+		pos = CustomAbstractSlider.value(self)
+		
+		customVal = self._v_minVal + np.double(pos) * self._v_step
+		
+		return customVal
+	# end value
+	
+	@pyqtSlot(float)
+	def setValue(self, value):
+		# check range
+		value = self._checkMinMax(float(value))
+		
+		# calculate slider position
+		pos = round((np.double(value) - self._v_minVal) / self._v_step, 0)
+		
+		# set sldier position
+		CustomAbstractSlider.setValue(self, pos)
+		
+		return value
+	# end setValue
+
+	
+	# ---------/\--------- #
+	# overloaded functions #
+	# -------------------- #
+
+# end class customFloatSlider
+
+
+## custom logarithm slider 
+class customLogarithmSlider(CustomAbstractSlider):
+	sigChanged = pyqtSignal(int)
+	
+	## initial class function
+	# @param self The object pointer.
+	# @param *args arguments as list
+	# @param **kwargs arguments as dict
+	def __init__(self, *args, **kwargs):
+		CustomAbstractSlider.__init__(self, CustomAbstractSlider.LOGARITHM, *args, **kwargs)
+	# end __init
+	
+	def _emitChange(self):
+		value = self.value()
+		self.sigChanged[int].emit(value)
+	# end _emitChange
+
+	# -------------------- #
+	# overloaded functions #
+	# ---------\/--------- #
+	
+	def setSingleStep(self, singleStep):
+		return
+		#self._v_step = singleStep
+		#return CustomAbstractSlider.setSingleStep(self, 1)
+	# end setSingleStep
+	
+	def setMinimum(self, minVal):
+		self._v_minVal = minVal
+		
+		if (self._v_maxVal == 0):
+			return CustomAbstractSlider.setMinimum(self, minVal)
+		# end if
+		
+		minVal = np.log10(int(minVal)) * 1000
+		maxVal = np.log10(int(self._v_maxVal)) * 1000
+		
+		# set step size
+		step = np.round((maxVal - minVal) / 1000, 0)
+		CustomAbstractSlider.setSingleStep(self, np.int32(step))
+	
+		return CustomAbstractSlider.setMinimum(self, minVal)
+	# end setMaximum
+		
+	def setMaximum(self, maxVal):
+		self._v_maxVal = maxVal
+		
+		if (self._v_minVal == 0):
+			return CustomAbstractSlider.setMinimum(self, maxVal)
+		# end if
+		
+		minVal = np.log10(int(self._v_minVal)) * 1000
+		maxVal = np.log10(int(maxVal)) * 1000
+		
+		# set step size
+		step = np.round((maxVal - minVal) / 1000, 0)
+		CustomAbstractSlider.setSingleStep(self, np.int32(step))
+		
+		return CustomAbstractSlider.setMaximum(self, maxVal)
+	# end setMaximum
+	
+	## returns custom value and overload original function
+	# @param self The object pointer.
+	def value(self):
+		pos = CustomAbstractSlider.value(self)
+		
+		customVal = np.power(10, np.double(pos) / 1000)
+		customVal = np.int32(np.round(customVal, 0))
+		
+		return customVal
+	# end value
+	
+	@pyqtSlot(int)
+	def setValue(self, value):
+		# check range
+		value = self._checkMinMax(int(value))
+		
+		# calculate slider position
+		pos = np.int32(round(np.log10(value) * 1000, 0))
+		
+		# set slider position
+		CustomAbstractSlider.setValue(self, pos)
+		
+		return value
+	# end setValue
+	
+# end class customLogarithmSlider
+
+
+
+## alias class for customFloatSlider
+class customDoubleSlider(customFloatSlider):
+	
+	## initial class function
+	# @param self The object pointer.
+	# @param *args arguments as list
+	# @param **kwargs arguments as dict
+	def __init__(self, *args, **kwargs):
+		customFloatSlider.__init__(self, *args, **kwargs)
+	# end __init
+
+# end class customDuableSlider
+
+
+# @}

@@ -14,13 +14,17 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 
 
-from guiqwt.plot import PlotManager, ImageWidget
-from guiqwt.curve import CurvePlot
-from PyQt4.QtCore import SIGNAL
+try:
+	from guiqwt.plot import PlotManager, ImageWidget
+	from guiqwt.curve import CurvePlot
+	from guiqwt.image import ImagePlot
+	from guiqwt.signals import (SIG_PLOT_AXIS_CHANGED)
+except ImportError:
+	print('Can not import guiqwt.')
+	CurvePlot = object
+# end try
+from PyQt4.QtCore import SIGNAL, pyqtSignal
 from PyQt4.QtGui import QIcon, QToolButton, QGridLayout, QWidget, QMainWindow
-from guiqwt.image import ImagePlot
-from guiqwt.signals import (SIG_PLOT_AXIS_CHANGED)
-
 
 
 class noneBugCurvePlot(CurvePlot):
@@ -231,4 +235,3 @@ class plotWindow(QMainWindow):
 	# end __onAutoScale
 	
 # end class plotWindow
-

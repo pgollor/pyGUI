@@ -30,35 +30,54 @@ class module(applicationModuleClass):
 
 	def __onPushButtonInit(self):
 		self.p_progressBar.init(self, printModuleName = True)
+		
+		self.lineEditPbValue.setEnabled(True)
 	# end __onPushButtonInit
 	
 	def __onPushButtonSet(self):
-		val = int(self.lineEditValue.text())
-		self.p_progressBar.setValue(val)
+		self.p_progressBar.setValue(self._getSettings('PbValue'))
 	# end __onPushButtonSet
 	
 	def __onPushButtonClear(self):
 		self.p_progressBar.clear()
+		self.lineEditPbValue.setText(0);
 	# end __onPushButtonClear
 	
 	def __onPushButtonDisable(self):
 		self.p_progressBar.disable()
+		
+		self.lineEditPbValue.setEnabled(False)
 	# end __onPushButtonDisable
 
 	# ---------- Private ----------
 
 
 	# ---------- overrided functions ----------
+	
+	## @brief return default settings
+	# @param self The object pointer.
+	# @return settings dict
+	def getDefaultSettings(self):
+		d = {'PbValue': {'qName': 'lineEditPbValue', 'value': 0, 'minVal': 0, 'maxVal': 100}}
+		
+		return d;
+	# end getDefaultSettings
 
 	def initModule(self):
 		applicationModuleClass.initModule(self)
 	#end _initModule
 
 	def initGUI(self):
+		self.lineEditPbValue.setEnabled(False)
+		self.lineEditPbValue.setText(0);
+		
 		self.pushButtonInit.clicked.connect(self.__onPushButtonInit)
 		self.pushButtonSet.clicked.connect(self.__onPushButtonSet)
 		self.pushButtonClear.clicked.connect(self.__onPushButtonClear)
 		self.pushButtonDisable.clicked.connect(self.__onPushButtonDisable)
+		
+		# Update progress bar if enter in lien edit pressed.
+		self.lineEditPbValue.returnPressed.connect(self.__onPushButtonSet)
 		
 		applicationModuleClass.initGUI(self)
 	# end _initGUI

@@ -1,14 +1,37 @@
-from PyQt4.QtCore import SIGNAL, pyqtSignal, pyqtSlot
+##
+# @file imageBox.py
+# 
+# @date unknown
+# @author Stanislav Tereschenko
+# @author Pascal Gollor (http://www.pgollor.de)
+# 
+# @copyright Dieses Projekt ist lizensiert als Inhalt der
+# Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 3.0 Unported-Lizenz.<br>
+# Um eine Kopie der Lizenz zu sehen, besuchen Sie http://creativecommons.org/licenses/by-sa/3.0/.<br>
+# -- englisch version --<br>
+# This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Germany License.<br>
+# To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
+# Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+#
+# @defgroup imageBox global image box
+# @{
+# @brief Image box which can be used in all modules.
+#
+# This image box can be used like any QWidget in an ui file or directly in your code.
+#
+
+
+from PyQt4.QtCore import pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QWidget, QLabel, QFrame, QSizePolicy, QStackedLayout
 import numpy as np
-
 from PyQt4 import uic
 
+
 class imageBox(QWidget):
-	# ---------- Variables ----------
+	## roiChanged signal
 	__p_signalRoiChanged = pyqtSignal(list, name = "roiChanged")
-	# ---------- Variables ----------
 	
+	## initial function
 	def __init__(self, *args, **kwargs):
 		QWidget.__init__(self, *args, **kwargs)
 		
@@ -33,12 +56,18 @@ class imageBox(QWidget):
 		self.init(800, 600, 10, 10)
 	# end __init__
 	
+	## @brief Qt Resize event
+	# @param self The object pointer.
+	# @param event Qt event
 	def resizeEvent(self, event):
 		self.__p_frameSize = self.frameROI_dummy.size()
 		self.__updateROISize(self.__v_actualImageWidth,self.__v_actualImageHeight,self.__v_actualImageXPos,self.__v_actualImageYPos)
-		QWidget.resizeEvent(self, event)
+
+		return QWidget.resizeEvent(self, event)
 	#end resizeEvent
 	
+	## @brief initialize GUI
+	# @param self The object pointer.
 	def __initGui(self):
 		self.setMinimumSize(420, 320)
 		
@@ -58,7 +87,7 @@ class imageBox(QWidget):
 		
 		layout = QStackedLayout()
 		layout.setStackingMode(QStackedLayout.StackAll)
-		self.gridLayout.addLayout(layout, 2, 2)
+		self.gridLayout.addLayout(layout, 2, 2) # add in the middle
 		
 		layout.addWidget(self.frameROI_dummy)
 		layout.addWidget(self.labelOverlayImage)
@@ -67,89 +96,33 @@ class imageBox(QWidget):
 		#self.gridLayout.addLayout(layout,2,2)
 		self.__p_frameSize = self.frameROI_dummy.size()
 		
-		# slider
+		# connect line edits to slider
 		self.sliderWidth.connectLineEdit(self.lineEditWidth)
 		self.sliderHeight.connectLineEdit(self.lineEditHeight)
 		self.sliderXPos.connectLineEdit(self.lineEditXPos)
 		self.sliderYPos.connectLineEdit(self.lineEditYPos)
 
 		# connect signals
-		self.connect(self.sliderWidth, SIGNAL("valueChanged(PyQt_PyObject)"), self.__onSliderChangeWidth)
-		self.connect(self.sliderHeight, SIGNAL("valueChanged(PyQt_PyObject)"), self.__onSliderChangeHeight)
-		self.connect(self.sliderXPos, SIGNAL("valueChanged(PyQt_PyObject)"), self.__onSliderChangeXPos)
-		self.connect(self.sliderYPos, SIGNAL("valueChanged(PyQt_PyObject)"), self.__onSliderChangeYPos)
+		self.sliderWidth.sigChanged[int].connect(self.__onSliderChangeWidth)
+		self.sliderHeight.sigChanged[int].connect(self.__onSliderChangeHeight)
+		self.sliderXPos.sigChanged[int].connect(self.__onSliderChangeXPos)
+		self.sliderYPos.sigChanged[int].connect(self.__onSliderChangeYPos)
 		
-		self.connect(self.sliderWidth, SIGNAL("changed(PyQt_PyObject)"), self.__onChanged)
-		self.connect(self.sliderHeight, SIGNAL("changed(PyQt_PyObject)"), self.__onChanged)
-		self.connect(self.sliderXPos, SIGNAL("changed(PyQt_PyObject)"), self.__onChanged)
-		self.connect(self.sliderYPos, SIGNAL("changed(PyQt_PyObject)"), self.__onChanged)
+		self.sliderWidth.sigChanged[int].connect(self.__onChanged)
+		self.sliderHeight.sigChanged[int].connect(self.__onChanged)
+		self.sliderXPos.sigChanged[int].connect(self.__onChanged)
+		self.sliderYPos.sigChanged[int].connect(self.__onChanged)
 	# end __initGui
-	"""
-	def mousePressEvent(self, event):
-		#noch im Testmodus
-		
-		return
-		framePos = QPoint(self.__p_frameImage.x() + self.__p_frameRoi.x(), self.__p_frameImage.y() + self.__p_frameRoi.y())
-		mousePos = event.pos()
-		
-		if (mousePos.x() >= framePos.x() and mousePos.x() < framePos.x() + self.__p_frameRoi.width() and mousePos.y() >= framePos.y() and mousePos.y() < framePos.y() + self.__p_frameRoi.height()):
-			self.__v_mouseInRoi = mousePos
-		else:
-			self.__v_mouseInRoi = QPoint(-1, -1)
-		# end if
-		
-		QWidget.mousePressEvent(self, event)
-	# end mosuePressEvent
 	
-	def mouseMoveEvent(self, event):
-		# noch im Testmodus
-		
-		return
-		mousePos = event.pos()
-		
-		if (self.__v_mouseInRoi != QPoint(-1,-1)):
-			mouseDiff = (self.__v_mouseInRoi - mousePos) / 10
-			print(mouseDiff)
-			print(self.__p_frameRoi.pos())
-			
-			#self.__onSliderChangeXPos(self.__p_frameRoi.x() - mouseDiff.x())
-			#self.__onSliderChangeYPos(self.__p_frameRoi.y() - mouseDiff.y())
-			width = self.__p_frameRoi.width()
-			height = self.__p_frameRoi.height()
-
-			newX = self.__p_frameRoi.x() - mouseDiff.x()
-			newY = self.__p_frameRoi.y() - mouseDiff.y()
-			diffX = self.__p_frameImage.width() - self.__p_frameRoi.width()
-			diffY = self.__p_frameImage.height() - self.__p_frameRoi.height()
-			if (newX < 0):
-				newX = 0
-			# end if
-			if (newY < 0):
-				newY = 0
-			# end if
-			if (newX > diffX):
-				newX = diffX
-			# end if
-			if (newY > diffY):
-				newY = diffY
-			# end if
-
-			geo = QRect(newX, newY, width, height)
-			self.__p_frameRoi.setGeometry(geo)
-			
-			print()
-		# end if
-		
-		QWidget.mouseMoveEvent(self, event)
-	# end mouseMoveEvent
-	"""
-	
+	## @brief Changed slot for all slider.
+	# @param self The object pointer.
+	# @param val value
 	@pyqtSlot(int)
 	def __onChanged(self, val):
-		width = self.sliderWidth.editedValue()
-		height = self.sliderHeight.editedValue()
-		xPos = self.sliderXPos.editedValue()
-		yPos = self.sliderYPos.editedValue()
+		width = self.sliderWidth.value()
+		height = self.sliderHeight.value()
+		xPos = self.sliderXPos.value()
+		yPos = self.sliderYPos.value()
 		
 		roi = [width, height, xPos, yPos]
 		
@@ -161,29 +134,42 @@ class imageBox(QWidget):
 		# end if
 	# end __emitChange
 	
+	## @brief Changed slot for slider height.
+	# @param self The object pointer.
+	# @param value value
+	@pyqtSlot(int)
 	def __onSliderChangeHeight(self, value):		
 		# set current position
 		self.__v_actualImageHeight = value
-		self.sliderHeight.setEditedValue(value)
+		self.sliderHeight.setValue(value)
 		
 		# resize
 		self.__updateROISize(self.__v_actualImageWidth,self.__v_actualImageHeight,self.__v_actualImageXPos,self.__v_actualImageYPos)
 		# reinit position slider
-		self.sliderYPos.reInitInteger(maxval = self.__v_maxImageHeight - self.__v_actualImageHeight)
+		self.sliderYPos.setMaximum(self.__v_maxImageHeight - self.__v_actualImageHeight)
 	# end __onSliderChangeHeight
-		
+	
+	## @brief Changed slot for slider width.
+	# @param self The object pointer.
+	# @param value value
+	@pyqtSlot(int)
 	def __onSliderChangeWidth(self, value):
 		# set current position
 		self.__v_actualImageWidth = value
-		self.sliderWidth.setEditedValue(value)
+		self.sliderWidth.setValue(value)
 
 		# resize		
 		self.__updateROISize(self.__v_actualImageWidth,self.__v_actualImageHeight,self.__v_actualImageXPos,self.__v_actualImageYPos)
 
 		# reinit position slider
-		self.sliderXPos.reInitInteger(maxval = self.__v_maxImageWidth - self.__v_actualImageWidth)
+		self.sliderXPos.setMaximum(self.__v_maxImageWidth - self.__v_actualImageWidth)
 	# end __onSliderChangeWidth
 
+
+	## @brief Changed slot for slider x position.
+	# @param self The object pointer.
+	# @param value value
+	@pyqtSlot(int)
 	def __onSliderChangeXPos(self, value):
 		diff = self.__v_maxImageWidth - self.__v_actualImageWidth
 		
@@ -197,9 +183,13 @@ class imageBox(QWidget):
 		self.__updateROISize(self.__v_actualImageWidth,self.__v_actualImageHeight,new_value,self.__v_actualImageYPos)
 		# set new values
 		self.__v_actualImageXPos = new_value
-		self.sliderXPos.setEditedValue(new_value)
+		self.sliderXPos.setValue(new_value)
 	# end __onSliderChangeXPos
 	
+	## @brief Changed slot for slider y position.
+	# @param self The object pointer.
+	# @param value value
+	@pyqtSlot(int)
 	def __onSliderChangeYPos(self, value):
 		diff = self.__v_maxImageHeight - self.__v_actualImageHeight
 		
@@ -213,10 +203,10 @@ class imageBox(QWidget):
 		self.__updateROISize(self.__v_actualImageWidth,self.__v_actualImageHeight,self.__v_actualImageXPos,new_value)
 		# set new values
 		self.__v_actualImageYPos = new_value
-		self.sliderYPos.setEditedValue(new_value)
+		self.sliderYPos.setValue(new_value)
 	# end __onSliderChangeYPos
 	
-	def __updateROISize(self,w,h,x,y):
+	def __updateROISize(self, w, h, x, y):
 		x_frame = round((x / self.__v_maxImageWidth) * self.__p_frameSize.width())
 		y_frame = round((y / self.__v_maxImageHeight) * self.__p_frameSize.height())
 		w_frame = round((w / self.__v_maxImageWidth) * self.__p_frameSize.width())
@@ -225,6 +215,18 @@ class imageBox(QWidget):
 		self.frameROI.setGeometry(x_frame,y_frame,w_frame,h_frame)
 	# end __updateROISize
 	
+	## @brief Interface function for initializing the image box.
+	# @param self The object pointer.
+	# @param maxWidth Maximum width.
+	# @param maxHeight Maximum Height.
+	# @param minWidth Minimum width. Default 0.
+	# @param minHeight Minimum height. Default 0.
+	# @param stepWidth Step width for one change step. Default 1.
+	# @param stepHeight Step height for one change step. Default 1.
+	# @param stepX Step size for change in x position. Default 1.
+	# @param stepY Step size for change in y position. Default 1.
+	#
+	# All parameters have to be in pixel.
 	def init(self, maxWidth, maxHeight, minWidth = 0, minHeight = 0, stepWidth = 1, stepHeight = 1, stepX = 1, stepY = 1):
 		# set global variables
 		self.__v_maxImageWidth = maxWidth
@@ -235,48 +237,68 @@ class imageBox(QWidget):
 		self.__v_actualImageHeight = self.__v_maxImageHeight
 
 		# init slider
-		self.sliderWidth.initInteger(minWidth, maxWidth, stepWidth)
-		self.sliderHeight.initInteger(minHeight, maxHeight, stepHeight)
-		self.sliderXPos.initInteger(0, self.__v_maxImageWidth - self.__v_actualImageWidth, stepX)
-		self.sliderYPos.initInteger(0, self.__v_maxImageHeight - self.__v_actualImageHeight, stepY)
+		self.sliderWidth.init(minWidth, maxWidth, stepWidth)
+		self.sliderHeight.init(minHeight, maxHeight, stepHeight)
+		self.sliderXPos.init(0, self.__v_maxImageWidth - self.__v_actualImageWidth, stepX)
+		self.sliderYPos.init(0, self.__v_maxImageHeight - self.__v_actualImageHeight, stepY)
 		
 		# set slider values
-		self.sliderWidth.setEditedValue(self.__v_actualImageWidth)
-		self.sliderHeight.setEditedValue(self.__v_actualImageHeight)
-		self.sliderXPos.setEditedValue(self.__v_actualImageXPos)
-		self.sliderYPos.setEditedValue(self.__v_actualImageYPos)
+		self.sliderWidth.setValue(self.__v_actualImageWidth)
+		self.sliderHeight.setValue(self.__v_actualImageHeight)
+		self.sliderXPos.setValue(self.__v_actualImageXPos)
+		self.sliderYPos.setValue(self.__v_actualImageYPos)
 		
 		self.__l_lastRoi = [self.__v_actualImageWidth, self.__v_actualImageHeight, self.__v_actualImageXPos, self.__v_actualImageYPos]
 	# end init
 
-	def setBackgroundImage(self,image):
+	## @brief Interface function to set background image.
+	# @param self The object pointer.
+	# @param image Image as Qt pixmap.
+	def setBackgroundImage(self, image):
 		self.labelBackgroundImage.setPixmap(image)#.scaled(self.frame.size(),Qt.IgnoreAspectRatio))
 	# end setBackgroundImage
 	
-	def setOverlayImage(self,image):
+	## @brief Interface function to set an overlay image.
+	# @param self The object pointer.
+	# @param image Image as Qt pixmap.
+	def setOverlayImage(self, image):
 		self.labelOverlayImage.setPixmap(image)#.scaled(self.frame.size(),Qt.IgnoreAspectRatio))
 		self.labelOverlayImage.setVisible(True)
 	# end setBackgroundImage
 	
-	def enableBackgroundImage(self,enable=True):
+	## @brief Enable/Show background image.
+	# @param self The object pointer.
+	# @param enable True or False. Default True.
+	def enableBackgroundImage(self, enable = True):
 		self.labelBackgroundImage.setVisible(enable)
 	# end enableROIFrame
 	
-	def enableOverlayImage(self,enable=True):
+	## @brief Enable/Show overlay image.
+	# @param self The object pointer.
+	# @param enable True or False. Default True.
+	def enableOverlayImage(self, enable = True):
 		self.labelOverlayImage.setVisible(enable)
 	# end enableROIFrame
 	
-	def enableROIFrame(self,enable=True):
+	## @brief Enable/Show roi frame.
+	# @param self The object pointer.
+	# @param enable True or False. Default True.
+	def enableROIFrame(self, enable = True):
 		self.frameROI.setVisible(enable)
 	# end enableROIFrame
 	
+	## @brief Interface function to set region of interest.
+	# @param self The object pointer.
+	# @param *args Roi arguments.
+	# @return True or False.
+	#
+	# Roi argument options:
+	# - width, height
+	# - width, height, x position, y position
+	# - np.array([width, height, x position, y position])
+	# 
+	# X and y position are 0 if not specified. 
 	def setROI(self, *args):
-		"""
-		setROI(width, height)
-		setROI(width, height, x, y)
-		setROI(np.array([width, height, x, y]))
-		"""
-		
 		self.__v_emitSignal = False
 		
 		if (len(args) == 1):
@@ -310,8 +332,14 @@ class imageBox(QWidget):
 		return True
 	# end setROI
 	
+	## @brief Get region of interest.
+	# @param self The object pointer.
+	# @return [width, height, x position, y position]
 	def roi(self):
 		return [self.__v_actualImageWidth, self.__v_actualImageHeight, self.__v_actualImageXPos, self.__v_actualImageYPos]
 	# end roi()
 	
 # end class imageBox
+
+## @}
+	

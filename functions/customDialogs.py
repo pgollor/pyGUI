@@ -24,8 +24,8 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 
 
 class QWidgetSignals(QWidget):
-	onShow = pyqtSignal()
-	onClose = pyqtSignal()
+	sigOnShow = pyqtSignal()
+	sigOnClose = pyqtSignal()
 	
 	def __init__(self, parent = False):
 		QWidget.__init__(self, parent)
@@ -67,13 +67,13 @@ class QWidgetSignals(QWidget):
 	def _onCloseEvent(self):
 		# emit signal
 		#self.emit(SIGNAL("onClose()"))
-		self.onClose.emit()
+		self.sigOnClose.emit()
 	# end _oncliseEvent
 	
 	def _onShowEvent(self):
 		# emit signal	
 		#self.emit(SIGNAL("onShow()"))
-		self.onShow.emit()
+		self.sigOnShow.emit()
 	# end _onShowEvent
 		
 # end class QWidgetSignals
@@ -117,8 +117,8 @@ class externQWidget(QWidget):
 
 
 class QMainWindowSignals(QMainWindow, QWidgetSignals):
-	onShow = pyqtSignal()
-	onClose = pyqtSignal()
+	sigOnShow = pyqtSignal()
+	sigOnClose = pyqtSignal()
 	
 	def __init__(self, parent = None):
 		QMainWindow.__init__(self, parent)
@@ -141,8 +141,8 @@ class QMainWindowSignals(QMainWindow, QWidgetSignals):
 
 
 class QDialogSignals(QDialog):
-	onShow = pyqtSignal()
-	onClose = pyqtSignal()
+	sigOnShow = pyqtSignal()
+	sigOnClose = pyqtSignal()
 	
 	def __init__(self, parent = None):
 		QDialog.__init__(self, parent)
@@ -171,7 +171,7 @@ class QDialogSignals(QDialog):
 	def showEvent(self, event):
 		# emit signal	
 		#self.emit(SIGNAL("onShow()"))
-		self.onShow.emit()
+		self.sigOnShow.emit()
 		
 		# accept event	
 		event.accept()
@@ -180,7 +180,7 @@ class QDialogSignals(QDialog):
 	def closeEvent(self, event):
 		# emit signal
 		#self.emit(SIGNAL("onClose()"))
-		self.onClose.emit()
+		self.sigOnClose.emit()
 		
 		# accept event
 		event.accept()

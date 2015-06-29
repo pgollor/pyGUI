@@ -6,216 +6,311 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>780</width>
-    <height>510</height>
+    <width>640</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="customIntegerLineEdit" name="lineEditInteger">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>20</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>20</y>
-     <width>101</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>PushButton</string>
-   </property>
-  </widget>
-  <widget class="customFloatLineEdit" name="lineEditFloat">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="customStringLineEdit" name="lineEditNormal">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="customListLineEdit" name="lineEditList">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBoxTestCheck">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>160</y>
-     <width>121</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>CheckBox</string>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBoxTestGroup">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>150</y>
-     <width>120</width>
-     <height>80</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>GroupBox</string>
-   </property>
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radioButtonTestRadio">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>190</y>
-     <width>121</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>RadioButton</string>
-   </property>
-  </widget>
-  <widget class="customIntegerComboBox" name="comboBoxIntegerBox">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>280</y>
-     <width>74</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <item>
-    <property name="text">
-     <string>1</string>
-    </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="4">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
-   <item>
-    <property name="text">
-     <string>99</string>
-    </property>
+   <item row="1" column="3">
+    <widget class="QGroupBox" name="groupBoxFloatSlider">
+     <property name="title">
+      <string>custom float/double Slider</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="customFloatSlider" name="horizontalSliderFloat">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="labelFloatSlider">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="lineEditFloatSlider"/>
+      </item>
+     </layout>
+    </widget>
    </item>
-   <item>
-    <property name="text">
-     <string>156</string>
-    </property>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+    </widget>
    </item>
-  </widget>
-  <widget class="QComboBox" name="comboBoxStringBox">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>320</y>
-     <width>74</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <item>
-    <property name="text">
-     <string>eins</string>
-    </property>
+   <item row="3" column="1" colspan="2">
+    <widget class="QCheckBox" name="checkBoxTestCheck">
+     <property name="text">
+      <string>CheckBox</string>
+     </property>
+    </widget>
    </item>
-   <item>
-    <property name="text">
-     <string>sieben</string>
-    </property>
+   <item row="0" column="3">
+    <widget class="QGroupBox" name="groupBoxIntegerSlider">
+     <property name="title">
+      <string>custom integer Slider</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="customIntegerSlider" name="horizontalSliderInteger">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="labelIntegerSlider">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="lineEditIntegerSlider"/>
+      </item>
+     </layout>
+    </widget>
    </item>
-   <item>
-    <property name="text">
-     <string>zehn</string>
-    </property>
+   <item row="2" column="2" colspan="2">
+    <widget class="QGroupBox" name="groupBoxLogarithmSlider">
+     <property name="title">
+      <string>custom logarithm Slider</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="0" column="0">
+       <widget class="customLogarithmSlider" name="horizontalSliderLogarithm">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="labelLogarithmSlider">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLineEdit" name="lineEditLogarithmSlider"/>
+      </item>
+     </layout>
+    </widget>
    </item>
-  </widget>
-  <widget class="betterSlider" name="horizontalSliderTestSl">
-   <property name="geometry">
-    <rect>
-     <x>290</x>
-     <y>320</y>
-     <width>160</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="QLabel" name="labelTestSl">
-   <property name="geometry">
-    <rect>
-     <x>480</x>
-     <y>320</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>TextLabel</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEditTextSl">
-   <property name="geometry">
-    <rect>
-     <x>290</x>
-     <y>350</y>
-     <width>113</width>
-     <height>20</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="spinBoxSBN">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>390</y>
-     <width>42</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="doubleSpinBoxSBD">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>440</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
+   <item row="2" column="0">
+    <widget class="QGroupBox" name="groupBoxComboBox">
+     <property name="title">
+      <string>combo box</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Integer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="customIntegerComboBox" name="comboBoxIntegerBox">
+        <item>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>99</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>156</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>String</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="comboBoxStringBox">
+        <item>
+         <property name="text">
+          <string>eins</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>sieben</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>zehn</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0" rowspan="3">
+    <widget class="QGroupBox" name="groupBoxSpinBox">
+     <property name="title">
+      <string>spin box</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_7">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Integer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="spinBoxSBN"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Double/Float</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="doubleSpinBoxSBD"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QGroupBox" name="groupBoxTestGroup">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>40</height>
+      </size>
+     </property>
+     <property name="title">
+      <string>GroupBox</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" rowspan="2">
+    <widget class="QGroupBox" name="groupBoxCustomLineEdits">
+     <property name="title">
+      <string>custom line edits</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelLineEditInteger">
+        <property name="text">
+         <string>Integer 20 - 50</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="customIntegerLineEdit" name="lineEditInteger"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelLineEditFloat">
+        <property name="text">
+         <string>Float 1.0 - 2.0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="customFloatLineEdit" name="lineEditFloat"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="labelLineEditNormal">
+        <property name="text">
+         <string>Qt Normal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="customStringLineEdit" name="lineEditNormal"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="labelLineEditList">
+        <property name="text">
+         <string>List &quot;foo&quot; oder &quot;bar&quot;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="customListLineEdit" name="lineEditList"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="4" column="1" colspan="2">
+    <widget class="QRadioButton" name="radioButtonTestRadio">
+     <property name="text">
+      <string>RadioButton</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>customIntegerSlider</class>
+   <extends>QSlider</extends>
+   <header>customGuiElements.h</header>
+  </customwidget>
   <customwidget>
    <class>customFloatLineEdit</class>
    <extends>QLineEdit</extends>
@@ -242,9 +337,14 @@
    <header>functions/customGuiElements.h</header>
   </customwidget>
   <customwidget>
-   <class>betterSlider</class>
+   <class>customLogarithmSlider</class>
    <extends>QSlider</extends>
-   <header>betterSlider.h</header>
+   <header>customGuiElements.h</header>
+  </customwidget>
+  <customwidget>
+   <class>customFloatSlider</class>
+   <extends>QSlider</extends>
+   <header>customGuiElements.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

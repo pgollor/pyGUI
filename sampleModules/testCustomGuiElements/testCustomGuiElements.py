@@ -17,6 +17,7 @@
 
 
 from abstractModuleClass import applicationModuleClass
+from PyQt4.QtCore import pyqtSlot
 
 
 class module(applicationModuleClass):
@@ -59,20 +60,76 @@ class module(applicationModuleClass):
 				"IntegerBox": {"qName": "comboBoxIntegerBox", "value": 99},
 				"StringBox": {"qName": "comboBoxStringBox", "value": "sieben"},
 				"Float": {"qName": "lineEditFloat", "value": 1, "minVal": 1.0, "maxVal": 2.0},
-				"TestSl": {"qName": "horizontalSliderTestSl", "type": "double", "value": 10, "minVal": 0, "maxVal": 100, "step": 0.1, "pageStep": 20, "connectedLabels": ["labelTestSl"], "connectedLineEdits": ["lineEditTextSl"]},
+				"intSl": {
+									"qName": "horizontalSliderInteger",
+									"value": 4,
+									"minVal": -10,
+									"maxVal": 10,
+									"step": 2,
+									"pageStep": 2,
+									"connectedLabels": ["labelIntegerSlider"],
+									"connectedLineEdits": ["lineEditIntegerSlider"]
+									},
+				"floatSl": {
+									"qName": "horizontalSliderFloat",
+									"value": 1,
+									"minVal": -2,
+									"maxVal": 10,
+									"step": 0.2,
+									"pageStep": 2,
+									"connectedLabels": ["labelFloatSlider"],
+									"connectedLineEdits": ["lineEditFloatSlider"]
+									},
+				"logSl": {
+									"qName": "horizontalSliderLogarithm",
+									"value": 1,
+									"minVal": 1,
+									"maxVal": 100000,
+									"pageStep": 100,
+									"connectedLabels": ["labelLogarithmSlider"],
+									"connectedLineEdits": ["lineEditLogarithmSlider"]
+									},
 				"SBD": {"qName": "doubleSpinBoxSBD", "value": 2, "minVal": 0, "maxVal": 10, "step": 0.1},
 				"SBN": {"qName": "spinBoxSBN", "value": 2, "minVal": 0, "maxVal": 10, "step": 1}
 			}
 
 		return d
 	# end getDefaultSettings
+	
+	@pyqtSlot(int)
+	@pyqtSlot(float)
+	def __onSliderChange(self, value):
+		self._p_logger.info('Slider change to %s.', str(value))
+	# end __onSliderChange
+	
+	@pyqtSlot(int)
+	def __onIntegerSliderChange(self, value):
+		self._p_logger.info('Integer slider change to %i.', value)
+	# end __onFloatSliderChange
+	
+	@pyqtSlot(float)
+	def __onFloatSliderChange(self, value):
+		self._p_logger.info('Float slider change to %0.2f.', value)
+	# end __onFloatSliderChange
+	
+	@pyqtSlot(int)
+	def __onLogarithmSliderChange(self, value):
+		self._p_logger.info('Logarithm slider change to %i.', value)
+	# end __onFloatSliderChange
 
 	## @brief Function to initialize the GUI
 	# @param self The object pointer.
 	# 
 	# In this function you have to connect all Qt elements and so on.
 	def initGUI(self):
+		# connect signals
 		self.pushButton.clicked.connect(self.__onPushButton)
+		self.horizontalSliderInteger.sigChanged[int].connect(self.__onIntegerSliderChange)
+		self.horizontalSliderInteger.sigChanged[int].connect(self.__onSliderChange)
+		self.horizontalSliderFloat.sigChanged[float].connect(self.__onFloatSliderChange)
+		self.horizontalSliderFloat.sigChanged[float].connect(self.__onSliderChange)
+		self.horizontalSliderLogarithm.sigChanged[int].connect(self.__onLogarithmSliderChange)
+		self.horizontalSliderLogarithm.sigChanged[int].connect(self.__onSliderChange)
 		
 		applicationModuleClass.initGUI(self)
 	# end _initGUI

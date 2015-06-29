@@ -17,10 +17,12 @@
 
 from PyQt4.QtGui import QLabel, QTextEdit, QCheckBox, QRadioButton, QGroupBox,\
 	QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QSlider, QPlainTextEdit
-from functions.betterSlider import betterSlider
-from PyQt4.QtCore import SIGNAL, QObject
+from PyQt4.QtCore import QObject
 from functools import partial
-from functions.customGuiElements import abstractCustomLineEdit
+from functions.customGuiElements import abstractCustomLineEdit,\
+	customIntegerSlider, customFloatSlider,\
+	customDoubleSlider, customLogarithmSlider
+from PyQt4.Qt import pyqtSlot
 
 
 ## @brief check if checkClass in compareClassList
@@ -67,12 +69,12 @@ class settingsHandler(QObject):
 	
 	def __init__(self, module, savedSettings):
 		QObject.__init__(self)
+
 		# init variables
 		self.__p_module = module
 		self.__d_savedSettings = savedSettings
 		self.__d_internalSettings = dict()
 		self.__d_moduleSettings = dict()
-		
 
 		# get default settings from module
 		defaultSettings = module.getDefaultSettings()
@@ -120,6 +122,10 @@ class settingsHandler(QObject):
 	# @param self The object pointer.
 	# @param elemName element name
 	# @param elemValue element value
+	@pyqtSlot(str, int)
+	@pyqtSlot(str, float)
+	@pyqtSlot(str, str)
+	@pyqtSlot(str, bool)
 	def __onValidChange(self, elemName, elemValue):
 		self.__d_moduleSettings[elemName] = elemValue
 		self.__d_internalSettings[elemName]['value'] = elemValue
@@ -166,40 +172,31 @@ class settingsHandler(QObject):
 			
 			if (issubclass(elemClass, QLineEdit)):
 				if (issubclass(elemClass, abstractCustomLineEdit)):
-					sig = SIGNAL('validChange(PyQt_PyObject, PyQt_PyObject)')
-					dest = self.__onValidChange
+					elem.validChange.connect(self.__onValidChange)
 				else:
-					sig = SIGNAL('textChanged(QString)')
-					dest = partial(self.__onValidChange, elemName)
+					elem.textChanged[str].connect(partial(self.__onValidChange, elemName))
 				# end if
 			elif (issubclass(elemClass, QTextEdit)):
-				sig = SIGNAL('textChanged()')
-				dest = partial(self.__onTextEditChanged, elemName, elem)
+				elem.textChanged.connect(partial(self.__onTextEditChanged, elemName, elem))
 			elif (issubclass(elemClass, QCheckBox) or issubclass(elemClass, QGroupBox) ):
-				sig = SIGNAL('clicked(bool)')
-				dest = partial(self.__onValidChange, elemName)
+				elem.clicked[bool].connect(partial(self.__onValidChange, elemName))
 			elif (issubclass(elemClass, QRadioButton)):
-				sig = SIGNAL('toggled(bool)')
-				dest = partial(self.__onValidChange, elemName)
+				elem.toggled[bool].connect(partial(self.__onValidChange, elemName))
 			elif (issubclass(elemClass, QComboBox)):
-				sig = SIGNAL('currentIndexChanged(int)')
-				dest = partial(self.__onComboBoxValidChange, elemName, elem)
+				elem.currentIndexChanged[int].connect(partial(self.__onComboBoxValidChange, elemName, elem))
 			elif (issubclass(elemClass, QSpinBox)):
-				sig = SIGNAL("valueChanged(int)")
-				dest = partial(self.__onSpinBoxValidChange, elemName, elem)
+				elem.valueChanged[int].connect(partial(self.__onSpinBoxValidChange, elemName, elem))
 			elif (issubclass(elemClass, QDoubleSpinBox)):
-				sig = SIGNAL("valueChanged(double)")
-				dest = partial(self.__onSpinBoxValidChange, elemName, elem)
+				elem.valueChanged[float].connect(partial(self.__onSpinBoxValidChange, elemName, elem))
 			elif (issubclass(elemClass, QSlider)):
-			#elif (classEqual(elemClass, betterSlider)):
-				sig = SIGNAL('changed(PyQt_PyObject)')
-				dest = partial(self.__onValidChange, elemName)
+				try:
+					elem.sigChanged.connect(partial(self.__onValidChange, elemName))
+				except AttributeError:
+					print('BetterSlider is no longer supported!!!')
+				# end try
 			else:
 				continue
 			# end if
-		
-			self.disconnect(elem, sig, dest)
-			self.connect(elem, sig, dest)
 		# end for
 	# end __connectGUIelementSignals
 	
@@ -314,13 +311,9 @@ class settingsHandler(QObject):
 				# end if
 				
 				elem.setValue(value)
-			#elif (issubclass(elemClass, QSlider)):
-			#	print("slider")
-			#elif (issubclass(elemClass, betterSlider)):
-			elif (classEqual(elemClass, betterSlider)):
+			elif (classEqual(elemClass, customIntegerSlider) or classEqual(elemClass, customFloatSlider), classEqual(elemClass, customDoubleSlider), classEqual(elemClass, customLogarithmSlider)):
 				# own better slider class
-				# supported elements for betterSlider class:
-				# type: integer, double, logarithm
+				# supported elements for custom slider classes:
 				# value: current value
 				# minVal: minimum value
 				# maxVal: maximum value
@@ -329,7 +322,7 @@ class settingsHandler(QObject):
 				# connectedLabels: list for connected labels separated by , (optional)
 				# connectedLineEdits: list for connected line edits separated by , (optional)
 				
-				if ('type' not in elemDict or 'value' not in elemDict or 'maxVal' not in elemDict or 'minVal' not in elemDict):
+				if ('value' not in elemDict or 'minVal' not in elemDict or 'maxVal' not in elemDict):
 					continue
 				# end if
 				
@@ -343,22 +336,10 @@ class settingsHandler(QObject):
 					elemDict['pageStep'] = 10
 				# end if
 
-				# init betterSlider with type and values
+				# init slider with type and values
 				try:
-					if (elemDict['type'] == 'integer'):
-						elem.initInteger(int(elemDict['minVal']), int(elemDict['maxVal']), int(elemDict['step']))
-						elem.setPageStep(int(elemDict['pageStep']))
-						elem.setEditedValue(int(value))
-					elif (elemDict['type'] == 'double'):
-						elem.initDouble(float(elemDict['minVal']), float(elemDict['maxVal']), float(elemDict['step']))
-						elem.setPageStep(float(elemDict['pageStep']))
-						elem.setEditedValue(float(value))
-					elif (elemDict['type'] == 'logarithm'):
-						elem.initLogarithm(float(elemDict['minVal']), float(elemDict['maxVal']))
-						elem.setEditedValue(float(value))
-					else:
-						continue
-					# end if
+					elem.init(elemDict['minVal'], elemDict['maxVal'], elemDict['step'], elemDict['pageStep'])
+					elem.setValue(value)
 				except:
 					continue
 				# end try

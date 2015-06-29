@@ -46,8 +46,9 @@
 # dependencies = ["testSettingMod"]
 #
 # @subsection mod-icon Module icon:
-# Specify the icon for menu button by using the following line in initGui function:
-# <pre>self.getMenuButton().setIcon(QIcon(self.getModulePath(True) + '/joystick8.svg'))</pre>
+# Specify the icon for menu button by using the following line in initModule function:
+# - Icon from GUI icon folder: <pre>self._setIconPath('usb.svg', True)</pre>
+# - Icon from Module folder: <pre>self._setIconPath('usb.svg')</pre>
 #
 # @{
 
@@ -85,7 +86,7 @@ class module(applicationModuleClass):
 
 	# ---------- overrided functions ----------
 	
-	## @brief return default settings
+	## @brief Have to return default settings.
 	# @param self The object pointer.
 	# @return settings dict
 	def getDefaultSettings(self):
@@ -93,6 +94,17 @@ class module(applicationModuleClass):
 		
 		return d
 	# end getDefaultSettings
+	
+	## @brief Initialize Module function.
+	# @param self The object pointer.
+	#
+	# This function is called before initGUI.
+	# You can set a custom icon path or so. 
+	def initModule(self):
+		self._setIconPath('usb.svg', True)
+		
+		applicationModuleClass.initModule(self)
+	# end initModule
 
 	## @brief Function to initialize the GUI
 	# @param self The object pointer.

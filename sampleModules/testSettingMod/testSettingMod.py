@@ -34,6 +34,11 @@
 # - onInactive(self)
 # - getDefaultSettings(self)
 #
+# @subsection mod-icon Module icon:
+# Specify the icon for menu action by using the following line in initModule function:
+# - Icon from GUI icon folder: <pre>self._setIconPath('joystick8.svg', True)</pre>
+# - Icon from Module folder: <pre>self._setIconPath('joystick8.svg')</pre>
+#
 # @{
 
 from abstractModuleClass import settingModuleClass
@@ -73,6 +78,17 @@ class module(settingModuleClass):
 		
 		return d
 	# end getDefaultSettings
+	
+	## @brief Initialize Module function.
+	# @param self The object pointer.
+	#
+	# This function is called before initGUI.
+	# You can set a custom icon path or so. 
+	def initModule(self):
+		self._setIconPath('joystick8.svg', True)
+		
+		settingModuleClass.initModule(self)
+	# end initModule
 
 	## @brief Function to initialize the GUI
 	# @param self The object pointer.

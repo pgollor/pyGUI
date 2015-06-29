@@ -12,6 +12,11 @@
 # This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 Germany License.<br>
 # To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to<br>
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+#
+# @defgroup globalprogressBar global progress bar
+# @{
+# @brief global progress bar is used in main.ui
+#
 
 from PyQt4.QtGui import QProgressBar
 
@@ -23,10 +28,21 @@ class globalProgressBar(QProgressBar):
 		self.__p_label = False
 	# end __init__
 	
+	## @brief set label
+	# @param self The object pointer.
+	# @param label label as string
+	#
+	# The label is shown on the left site from the progress bar in a QLabel
 	def setLabel(self, label):
 		self.__p_label = label
 	# end setLabel
 	
+	## @brief initialize progress bar
+	# @param self The object pointer.
+	# @param module module pointer - default: False
+	# @param value value as integer between 0 and 100 - default: 0
+	# @param printModuleName print module name (depending on module pointer) - default: False
+	# @param waitOnly Use progress bar only as activity display without showing progress information. This means minimum = maximum = 0 - default: False
 	def init(self, module = False, value = 0, printModuleName = False, waitOnly = False):
 		if (waitOnly):
 			self.setMinimum(0)
@@ -72,4 +88,6 @@ class globalProgressBar(QProgressBar):
 		self.setVisible(False)
 	# end disable
 	
-# end class globalProgressBar	
+# end class globalProgressBar
+
+## @}	

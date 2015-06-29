@@ -33,7 +33,7 @@
     <property name="verticalSpacing">
      <number>2</number>
     </property>
-    <item row="1" column="1">
+    <item row="0" column="1">
      <widget class="QWidget" name="widgetProgressBar" native="true">
       <property name="minimumSize">
        <size>
@@ -127,19 +127,6 @@
       </layout>
      </widget>
     </item>
-    <item row="0" column="1">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>0</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubarMain">
@@ -220,39 +207,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-  </widget>
-  <widget class="QtLoggerDockWidget" name="dockWidgetLogger">
-   <property name="minimumSize">
-    <size>
-     <width>95</width>
-     <height>100</height>
-    </size>
-   </property>
-   <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-   </property>
-   <property name="floating">
-    <bool>false</bool>
-   </property>
-   <property name="features">
-    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetVerticalTitleBar</set>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>8</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetLoggerContents">
-    <layout class="QGridLayout" name="gridLayout">
-     <property name="margin">
-      <number>0</number>
-     </property>
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="QtLoggerListWidget" name="listWidgetConsole"/>
-     </item>
-    </layout>
-   </widget>
   </widget>
   <action name="actionClose">
    <property name="text">
@@ -340,23 +294,23 @@
     <string>del all settings</string>
    </property>
   </action>
+  <action name="actionOpenSettingsInNewWindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>open settings in new window</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>globalProgressBar</class>
    <extends>QProgressBar</extends>
    <header location="global">globalProgressBar.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QtLoggerListWidget</class>
-   <extends>QListWidget</extends>
-   <header location="global">guiLogger.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QtLoggerDockWidget</class>
-   <extends>QDockWidget</extends>
-   <header location="global">guiLogger.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>menuToolBar</class>
@@ -395,22 +349,6 @@
     <hint type="destinationlabel">
      <x>391</x>
      <y>50</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionLogger</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>dockWidgetLogger</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>391</x>
-     <y>679</y>
     </hint>
    </hints>
   </connection>

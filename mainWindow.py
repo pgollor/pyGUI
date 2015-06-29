@@ -14,27 +14,28 @@
 # Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 #
 # @brief Main window from Qt GUI and global module handler
+#
 
 
 import os, sys, logging
-from abstractModuleClass import abstractModuleClass, abstractGuiModuleClass
-from functools import partial
-from functions.mainMdiArea import mainMdiArea
+from PyQt4.Qt import QFrame
 
-# add sub dirs do path
+# add sub directories to path
 curPath = os.path.abspath(os.curdir)
 sys.path.append(curPath + '/functions/')
 
 
+from abstractModuleClass import abstractModuleClass, abstractGuiModuleClass
+from functools import partial
 from PyQt4 import uic
-#from PyQt4.Qt import QRect
-from PyQt4.QtCore import SIGNAL, Qt, pyqtSlot, QSettings, QProcess
-from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QWidget
+from PyQt4.QtCore import Qt, pyqtSlot, QSettings, QProcess, QObject
+from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QStatusBar, QTabWidget, QDockWidget,\
+	QLabel, QStyleOptionDockWidget, QStyleOptionDockWidgetV2
 import imp, re
 from functions.helper import str2bool
 from functions.delete import delete
 from functions.progressBarThread import progressBarThread
-from functions.guiLogger import QtLogger
+from functions.guiLogger import QtLogger, QtLoggerListWidget, QtLoggerDockWidget
 
 # This is a special value defined in Qt4 but does not seem to be exported
 # by PyQt4
@@ -42,45 +43,65 @@ QWIDGETSIZE_MAX = ((1 << 24) - 1)
 
 
 
-## @brief main gui class
+## @brief main window GUI class
 class mainWindow(QMainWindow):
-	# ---------- Private ----------
+	# ---- private begin ----
 	
-	## @brief init class function
+	## @brief initialize class function
 	# @param self The object pointer.
-	# @param parent Qt parent object pointer.
+	# @param loglevel Logging level for main window and all modules.
+	# @param debug Enabled debugging. Default is false.
 	# 
-	# init:
+	# initialize:
 	# - create logger thread
 	# - create main window logger client
-	# - create global progress bar
+	# - create global progress bar thread
+	# - add dialogs
+	# - manage central widget
 	def __init__(self, loglevel, debug = False, *args, **kwargs):
-		self.__initVars()
-		
 		QMainWindow.__init__(self, *args, **kwargs)
+		
+		self.__initVars()
 
-		#self.setupUi(self) # debug
+		# load main ui before setting debug level
 		uic.loadUi("./main.ui", self)
+
+
+		# create logger widget
+		self.__p_loggerDockWidget = QtLoggerDockWidget('Logging', self)
+		self.__p_loggerDockWidget.setObjectName('Logging')
+		self.__p_loggerListWidget = QtLoggerListWidget(self.__p_loggerDockWidget)
+		
+		# ... add list widget to dock widget
+		self.__p_loggerDockWidget.setWidget(self.__p_loggerListWidget)
+		
+		# ... add dock widget to main window
+		self.addDockWidget(Qt.BottomDockWidgetArea, self.__p_loggerDockWidget)
+
 		
 		# init QtLogger
-		QtLogger.printObj = self.listWidgetConsole
+		QtLogger.printObj = self.__p_loggerListWidget
 
-		# init logger
+		# init logger for main window
 		self.__p_logger = logging.getLogger("mainWindow")
-		self.__p_logger.setLevel(loglevel) # set log level to debug for main window
-		# ... also set debug level for modules
+		
+		# ... set log level
+		self.__p_logger.setLevel(loglevel)
+		
+		# ... set debug level for modules
 		abstractModuleClass.loglevel = loglevel
 		
+
 		# Hide debugging menu in none debugging mode
 		if (debug):
 			# add debug menu
 			self.menuDebug = self.menuBar().addMenu("Debug")
-																						
+
 			# add debug actions to menu
 			self.actionPrintSettings = self.menuDebug.addAction("print settings")
 			self.actionDelAllSettings = self.menuDebug.addAction("del all settings")
 			
-			# connect signals fo actions
+			# connect signals to actions
 			self.actionPrintSettings.triggered.connect(self.__onPrintSettings)
 			self.actionDelAllSettings.triggered.connect(self.__onDelAllSettings)
 		# end if
@@ -91,87 +112,101 @@ class mainWindow(QMainWindow):
 			#action.triggered.connect(self.__onHelp)
 		# end if
 		
-		# set parameters for global progress bar
+		# progress bar
+		# ... set parameters
 		self.progressBarGlobal.setLabel(self.labelProgressBarGlobal)
 		self.progressBarGlobal.disable()
 		
-		# progress bar
+		# ... create progress bar thread
 		self.__p_progressBarThread = progressBarThread(self)
-		self.connect(self.__p_progressBarThread, SIGNAL('sigProgressBarUpdate(PyQt_PyObject)'), self.__onProgressBarUpdate)
+		self.__p_progressBarThread.sigProgressBarUpdate.connect(self.__onProgressBarUpdate)
 		self.__p_progressBarThread.start()
 		
-		# about
+		# add dialogs
+		# ... about dialog
 		self.__p_about = QDialog(self)
 		uic.loadUi("./about.ui", self.__p_about)
 		self.actionAbout.triggered.connect(self.__p_about.exec)
 
-		# license
+		# ... license dialog
 		self.__p_license = QDialog(self)
 		uic.loadUi("./license.ui", self.__p_license)
 		self.actionLicense.triggered.connect(self.__p_license.exec)
 		
-		# setlect module dialog
+		# ... select module dialog
 		self.__p_selectModule = QDialog(self)
 		uic.loadUi('./selectModule.ui', self.__p_selectModule)
 		self.actionModules.triggered.connect(self.__p_selectModule.exec)
 		
-		# add mdiArea
-		self.setCentralWidget(self.centralwidget)
-		self.mdiAreaMain = mainMdiArea(self.centralwidget)
-		self.centralwidget.layout().addWidget(self.mdiAreaMain, 0, 0)
-		self.centralwidget.layout().addWidget(self.widgetProgressBar, 1, 0)
+		# init GUI
+		# ... set central widget to none
+		#self.setCentralWidget(None)
+		self.centralWidget().setFixedSize(0,0)
+		
+		# ... Add all dock widgets on startup into the left area. An show tabs on top.
+		self.setTabPosition(Qt.LeftDockWidgetArea, QTabWidget.North)
+		
+		# ... create and add status bar
+		self.__p_statusBar = QStatusBar()
+		self.setStatusBar(self.__p_statusBar)
+		
+		# ... move progress bar widget into status bar
+		self.__p_statusBar.addWidget(self.widgetProgressBar, 1)
 
+		# ... set tool button style
 		self.toolBar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 		
-		# create main settings object
+		# settings
+		# ... create main settings object
 		self.__p_settingsHandle = QSettings('./' + self.__v_userSettingsFileName, QSettings.IniFormat)
 		
-		# set QSettings handle
+		# ... set QSettings handle
 		abstractGuiModuleClass.settingsHandle = self.__p_settingsHandle
 	# end __init__
+	
 
 	## @brief del function
 	# @param self The object pointer.
 	#
-	# delete all member variables and threads
+	# Delete all member variables and threads.
 	def __del__(self):
-		# delete list item pointer
+		# set static variables to false
 		QtLogger.printObj = False
+		abstractGuiModuleClass.settingsHandle = False
+		abstractModuleClass.d_modules = dict()
+		abstractModuleClass.p_progressBar = False
+		abstractModuleClass.p_progressBarThread = False
 		
-		# del progressBar
+		# stop and delete progressBar
 		if (self.__p_progressBarThread != False):
-			self.disconnect(self.__p_progressBarThread, SIGNAL('sigProgressBarUpdate(PyQt_PyObject)'), self.__onProgressBarUpdate)
+			self.__p_progressBarThread.sigProgressBarUpdate.disconnect(self.__onProgressBarUpdate)
 			self.__p_progressBarThread.stop()
 			self.__p_progressBarThread.wait(500)
-			del(self.__p_progressBarThread)
 			self.__p_progressBarThread = False
 		# end if
 		
+		# set all variables to false to free memory
 		self.__initVars()
 	# end __del__
 	
-	## @brief init class variables
+	## @brief Initialize class variables.
 	# @param self The object pointer.
-	# 
-	# initialize variables
 	def __initVars(self):
+		self.__p_loggerDockWidget = False
+		self.__p_loggerListWidget = False
+		
+		## main window status bar
+		self.__p_statusBar = False
+		
 		## global module directory
 		# with "/" at the end!!!
 		self.__v_modulePath = "modules/"
 		
-		## path for GUI xml files
-		self.__v_settingsFilePath = os.path.abspath(os.curdir) + '/'
-		
 		## filename from used modules xml file
 		self.__v_userSettingsFileName = 'userSettings.ini'
-
-		## current module object
-		self.__p_currentModule = None
 		
 		## current tab index
 		self.__v_currentTabIndex = -1
-		
-		self.__s_currentName = ""
 		
 		## about dialog
 		self.__p_about = False
@@ -188,80 +223,16 @@ class mainWindow(QMainWindow):
 		## main gui logger object
 		self.__p_logger = False
 		
-		## bottom layout in menu bar
-		self.__p_bottomMenuLayout = False
-		
 		## list of used modules
 		self.__l_usedModules = []
 		
-		## progressbar object thread
+		## progress bar object thread
 		self.__p_progressBarThread = False
 		
-		##
-		self.__v_lastModule = ''
-		
-		self.__p_openSetttingWidget = False		
+		## module counter
+		self.__v_moduleCounter = 0
 	# end __initVars
 	
-	## @brief init function
-	# @param self The object pointer.
-	# @param availGeo available geometry as QRect
-	# 
-	# This init function load the modules an initialize the main gui. 
-	def init(self, availGeo):
-		self.__p_logger.debug("available geometry " + str(availGeo))
-		self.__p_logger.debug("try load main window settings")
-		
-		# load settings
-		self.__loadSettings()
-
-		self.__p_logger.debug("try load modules...")
-		self.__loadModules()
-		self.__p_logger.debug("load modules finished")
-	
-		# expend all trees
-		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
-			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
-			item.setExpanded(True)
-		# end for
-
-		# init gui
-		self.actionSettingsLoad.triggered.connect(self.__onSettingsLoad)
-		self.actionSettingsDefault.triggered.connect(self.__onSettingsDefault)
-		self.actionSettingsSave.triggered.connect(self.__onSettingsSave)
-		self.actionSettingsSaveAll.triggered.connect(self.__onSettingsSaveAll)
-		
-		# signals for action logger and dockWidgetLogger
-		self.dockWidgetLogger.visibilityChanged[bool].connect(self.__onDockWidgetLoggerVisibilityChanged)
-		
-		# connect signals from main tab
-		self.__p_selectModule.pushButtonSelectAll.clicked.connect(self.__selectAll)
-		self.__p_selectModule.pushButtonUnselectAll.clicked.connect(self.__unselectAll)
-		self.__p_selectModule.treeWidgetModules.itemChanged[QTreeWidgetItem, int].connect(self.__onTreeWidgetChanged)
-		
-		# connect signals from mdi area
-		#self.mdiAreaMain.dropModule.connect(self.__onDropModuleInMdiArea)
-		self.mdiAreaMain.subWindowActivated.connect(self.__onModuleActivated)
-		self.mdiAreaMain.dockOut.connect(self.__onDockOut)
-		
-		## check for window height
-		# if available desktop height smaler than main window height, then move the logger dock widget to the left site
-		if (availGeo.height() < self.height()):
-			self.dockWidgetLogger.setDockWidgetArea(Qt.LeftDockWidgetArea)
-		# end if
-	# end init
-
-
-	@pyqtSlot()
-	def __onHelp(self):
-		path = os.path.abspath(os.curdir) + "/doc/index.chm"
-		QProcess.startDetached("hh.exe " + path)
-	# end __onHelp
-	
-	@pyqtSlot(bool)
-	def __onDockWidgetLoggerVisibilityChanged(self, visible):
-		self.actionLogger.setChecked(visible)
-	# end __onDockWidgetLoggerVisibilityChanged
 	
 	## @brief private slot for updating the progressbar
 	# @param self The object pointer.
@@ -276,6 +247,7 @@ class mainWindow(QMainWindow):
 	# - disable
 	# - newVal or ready
 	#
+	@pyqtSlot(list)
 	def __onProgressBarUpdate(self, ret):
 		value, command = ret
 		
@@ -300,6 +272,85 @@ class mainWindow(QMainWindow):
 			self.progressBarGlobal.setValue(value)
 		# end if
 	# end if
+	
+	## @brief get user settings like used module list and gui position
+	# @param self The object pointer.
+	# 
+	# Load only the modules which were selected by the user.
+	def __loadSettings(self):
+		# main group
+		self.__p_settingsHandle.beginGroup('main')
+		displayName = self.__p_settingsHandle.value("displayName", "pyGUI")
+		geo = self.__p_settingsHandle.value("geo")
+		#state = self.__p_settingsHandle.value('state')
+		self.__p_settingsHandle.endGroup()
+		
+		saveOnExit = self.__p_settingsHandle.value("settings/saveOnExit", True)
+		
+		# modules group
+		self.__p_settingsHandle.beginGroup('module')
+		self.__l_usedModules = self.__p_settingsHandle.value('used', [])
+		self.__p_settingsHandle.endGroup()
+
+		# restore state and geometry if information is available
+		#if (state):
+		#	self.restoreState(state)
+		# end if
+		if (geo):
+			self.restoreGeometry(geo)
+		# end if
+
+		# if no used modules are available		
+		if (self.__l_usedModules == None):
+			self.__l_usedModules = []
+		# end if
+
+		# restore settings
+		self.actionSaveSettingsOnExit.setChecked(str2bool(saveOnExit))
+		
+		# set display name
+		self.setWindowTitle(displayName)
+	# end __loadSettings
+
+	
+	## @brief save window and user settings
+	# @param self The object pointer.
+	#
+	# saved settings are:
+	# - main window position and size
+	# - current active module
+	def __saveSettings(self):
+		# modules
+		self.__l_usedModules = list()
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
+
+			for c in range(item.childCount()):
+				child = item.child(c)
+
+				if (child.checkState(0) == Qt.Checked):
+					self.__l_usedModules.append(child.text(0))
+				# end if
+			# end for
+		# end for
+		
+		# main window settings
+		self.__p_settingsHandle.setValue("main/geo", self.saveGeometry())
+		if (self.__v_moduleCounter > 0):
+			self.__p_settingsHandle.setValue("main/state", self.saveState())
+		# end if
+		self.__p_settingsHandle.setValue("main/displayName", self.windowTitle().split()[0])
+		
+		# used module settings
+		self.__p_settingsHandle.setValue("module/used", self.__l_usedModules)
+		
+		# settings
+		self.__p_settingsHandle.setValue("settings/saveOnExit", self.actionSaveSettingsOnExit.isChecked())
+	# end __saveSettings
+
+	
+	# --- module handler begin ---
+	
 
 	## @brief search for modules
 	# @param self The object pointer.
@@ -347,7 +398,12 @@ class mainWindow(QMainWindow):
 				os.chdir(moduleDir)
 
 				# import module
-				modHandle = imp.load_source(name, moduleDir + "/" + name + ".py")
+				fullpath_to_py = moduleDir + "/" + name + ".py"
+				if not os.path.isfile(fullpath_to_py):
+					continue
+				# end if
+				
+				modHandle = imp.load_source(name, fullpath_to_py)
 
 				# switch back to main directory
 				os.chdir(currentDir)
@@ -398,7 +454,7 @@ class mainWindow(QMainWindow):
 			item.addChildren(itemList[moduleClassType])
 			
 			index += 1
-		# end for
+		# end for - search for modules in module order
 		
 		# init modules
 		for module in modules:
@@ -409,13 +465,17 @@ class mainWindow(QMainWindow):
 			module["handle"] = module["modHandle"].module(self, module["name"])
 			
 			#self.__p_logger.debug("load module " + module["name"])
-		# end for
+		# end for - init modules
 
-		# open modules
+
+		# set static functions
 		abstractModuleClass.d_modules = dict()
 		abstractModuleClass.p_progressBar = self.progressBarGlobal
 		abstractModuleClass.p_progressBarThread = self.__p_progressBarThread
-		
+
+
+		# open modules and load GUI
+		firstDockWidget = None
 		for module in modules:
 			moduleName = module['name']
 			moduleHand = module['handle']
@@ -446,64 +506,23 @@ class mainWindow(QMainWindow):
 				os.chdir(currentDir)
 
 				# set module settings
-				moduleHand.setModulePath(self.__v_modulePath + module["suffix"] + module["name"], os.path.abspath(os.curdir))
+				moduleHand.setModulePath(self.__v_modulePath + module["suffix"] + moduleName, os.path.abspath(os.curdir))
 				moduleHand.setIncludes(includes)
 	
 				# check for module type
 				moduleClassType = moduleHand.getClassType()
-				
-				action = False
 
 				# module type specific init
-				if (moduleClassType == "application"):
+				if (moduleClassType != 'hidden'):
 					# load [moduleName].ui
 					self.__p_logger.setLevel(logging.WARN)
 					uic.loadUi(moduleDir + "/" +moduleName + ".ui", moduleHand)
-					self.__p_logger.setLevel(logging.DEBUG)
+					self.__p_logger.setLevel(abstractModuleClass.loglevel)
 
-					# get menu button and connect
-					button = moduleHand.getMenuButton()
-					a = self.toolBar.addWidget(button)
-					moduleHand.setMenuAction(a)
-					
-					# connect signal from application menu button
-					button.clicked.connect(self.__onModuleShow) # clicked[Widget] wird nicht benoetigt, da dies in pyqtSlot entahlten sind
-					button.doubleClicked.connect(self.__onModuleShowMaximized)
-				elif (moduleClassType == "setting"):
-					# load [moduleName].ui
-					
-					self.__p_logger.setLevel(logging.WARN)
-					uic.loadUi(moduleDir + "/" + moduleName + ".ui", moduleHand)
-					self.__p_logger.setLevel(logging.DEBUG)
-
-					action = self.menuModuleSettings.addAction(moduleName)
-
-					# connect signals
-					#self.connect(action, SIGNAL('triggered()'), partial(self.__onSettingWidgetShow, module['handle']))
-					action.triggered.connect(partial(self.__onSettingWidgetShow, module['handle']))
-					self.connect(moduleHand, SIGNAL('onClose(PyQt_PyObject)'), self.__onSettingWidgetClose)
-				# end if
-
-				iconPath = False	
-				if (moduleClassType != "hidden"):
+					# load module settings
 					moduleHand.initPreSettings()
 					moduleHand.handleSettings()
 					moduleHand.loadSettings()
-					
-					iconPath = moduleHand.getIconPath()
-				# end if
-
-				# use module icons
-				# application: icon for menu button
-				# setting: icon for QAction
-				icon = None
-				if (iconPath != False):
-					icon = QIcon(iconPath)
-					if (moduleClassType == 'application'):
-						moduleHand.getMenuButton().setIcon(icon)
-					elif (moduleClassType == 'setting'):
-						action.setIcon(icon)
-					# end if
 				# end if
 
 				# join in specific modules folder for initModule
@@ -512,45 +531,100 @@ class mainWindow(QMainWindow):
 				os.chdir(currentDir)
 	
 				# add module widget to GUI
-				if (moduleClassType == 'application'):
+				if (moduleClassType != 'hidden'):
+					iconPath = False
+					icon = None
+					
+					# get icon path
+					iconPath = moduleHand.getIconPath()
+					
+					# try to load icon
+					if (iconPath != False):
+						icon = QIcon(iconPath)
+					# end if
+					
 					# init menu button
 					button = moduleHand.getMenuButton()
 					button.setText(moduleHand.getDisplayName())
 					
-					# add module to mdiArea an set visible = false
-					#self.widgetMain.layout().addWidget(moduleHand)
-					sw = self.mdiAreaMain.addSubWindow(moduleHand)
-					sw.setVisible(False)
+					# dock widget for current module
+					# ... create
+					dockWidget = mainWindowDockWidget(moduleName, self)
 					
-					# set window options like title ect.
-					sw.setWindowTitle(moduleName)
-					sw.setWindowIcon(moduleHand.getMenuButton().icon())
-				
-					# connect on invisible signal
-					moduleHand.onInvisible[QWidget].connect(self.__onModuleInvisible)
+					# ... set object name and title
+					dockWidget.setObjectName(moduleName)
+					dockWidget.setWindowTitle(moduleName)
 					
-					#moduleHand.setParent(self)
-				elif (moduleClassType == 'setting'):
-					moduleHand.setWindowTitle(moduleHand.getDisplayName())
-					moduleHand.setParent(self, Qt.Window)
+					# ... add module
+					dockWidget.setWidget(moduleHand)
+					
+					# ... add to main window
+					self.addDockWidget(Qt.LeftDockWidgetArea, dockWidget)
+					
+					dockWidget.setVisible(False)
+					
+					# tabify all dock widgets
+					if (firstDockWidget == None):
+						firstDockWidget = dockWidget
+					else:
+						self.tabifyDockWidget(firstDockWidget, dockWidget)
+					# end if
+					
+					# ... Set window title and icon.
+					dockWidget.setWindowTitle(moduleName)
+					dockWidget.setWindowIcon(moduleHand.getMenuButton().icon())
+					
+					# ... Connect signal for checking and unchecking menu button on visibility change.
+					#     If module is tabbed then set active module as current module.
+					dockWidget.visibilityChanged[bool].connect(partial(self.__onModuleVisibilityChanged, dockWidget))
+
+
+					# add button for application module and action for setting module					
+					if (moduleClassType == 'application'):
+						# get menu button
+						button = moduleHand.getMenuButton()
+						
+						# set icon for menu button
+						if (icon != None):
+							button.setIcon(icon)
+						# end if
+						
+						# add menu button to tool bar
+						self.toolBar.addWidget(button)
+						
+						# connect signal from application menu button
+						button.clicked[QObject].connect(self.__onModuleButtonClicked)
+					else:
+						# get action
+						action = dockWidget.toggleViewAction()
+						
+						# set icon
+						if (icon != None):
+							action.setIcon(icon)
+						# end if
+						
+						# add action to settings menu
+						self.menuModuleSettings.addAction(action)
+					# end if
 				else:
 					moduleHand.setParent(None)
 				# end if
 			except Exception as e:
-				msg = "Fehler in Module " + moduleName
+				msg = "Error in module " + moduleName
 				self.__p_logger.critical(msg)
 				print(msg)
 				raise e
 			# end try
 		# end for
-		
-		#self.mdiAreaMain.cascadeSubWindows()
+
 
 		# init gui
 		for module in modules:
 			if (module["modHandle"] == False):
 				continue
 			# end if
+			
+			self.__v_moduleCounter += 1
 			
 			moduleDir = modulesPath + module["suffix"] + module["name"]
 			moduleClassType = module["handle"].getClassType()
@@ -579,272 +653,127 @@ class mainWindow(QMainWindow):
 				
 				continue
 			# end if
-
-			if (moduleName == self.__v_lastModule):
-				mod = abstractModuleClass.getModuleByName(moduleName)
-				if (mod != False):
-					self.__onModuleShowMaximized(mod['handle'])
-					mod['handle'].getMenuButton().setChecked(True)
-				# end if
-			# end if
-		# end for
 	# end __loadModules
 	
-	def __onSettingWidgetShow(self, module):
-		if (self.__p_openSetttingWidget != False):
-			self.__p_logger.error('There ist already a settings module opend.')
-			return
-		# end if
+	
+	# --- module slots begin ---
+	
 
-		self.__p_openSetttingWidget = module
-		module.show()
-	# end __onSettingWidgetShow
-	
-	def __onSettingWidgetClose(self, module):
-		self.__p_openSetttingWidget = False
-	# end __onSettingWidgetClose
-	
-	## @brief if module docks out from mdiArea
-	@pyqtSlot(QWidget)
-	def __onDockOut(self, win):
-		# get module widget from subWindow 
-		module = win.widget()
-
-		# delete sub window
-		win.setWidget(None)
-		self.mdiAreaMain.removeSubWindow(win)
-		del(win)
+	## @brief Slot for dock widget visibility change.
+	# @param self The object pointer.
+	# @param dockWidget dockWidget form current module
+	# @param v visibility as True or False
+	@pyqtSlot(QDockWidget, bool)
+	def __onModuleVisibilityChanged(self, dockWidget, v):
+		module = dockWidget.widget()
 		
-		# set new parent for module
-		module.setParent(self, Qt.Window)
+		module.getMenuButton().setChecked(dockWidget.isVisible())
 		
-		# set icon and show module
-		module.setWindowIcon(module.getMenuButton().icon())
-		module.show()
-		module.move(self.geometry().center() - module.geometry().center())
-	# end __onDockOut
-	
-	## Qt slot: emit if module ignore close event and set visible = false
-	# @param module: module pointer
-	@pyqtSlot(QWidget)
-	def __onModuleInvisible(self, module):
-		if (len(self.mdiAreaMain.visibleSubWindowList()) == 0):
-			self.__p_currentModule = None
+		if (v):
+			mainWindowDockWidget.setAsCurrent(dockWidget)
+			
+			#self.__p_currentModule = module
+			#self.__p_currentModule.onActive()
 		# end if
-	# end __onMpduleInvisible
+	# end __onModuleVisibilityChanged
 	
-	## @brief connect with subWindowActivated from mdiAreaMain
-	# @param widget: current widget in mdiArea
-	@pyqtSlot(QWidget)
-	def __onModuleActivated(self, widget):
-		# do nothing on mainWindow close
-		if (widget == None):
-			return
-		# end if
-		
-		self.__p_currentModule = widget.widget() 
-		self.__p_currentModule.onActive()
-		
-		# inactive other visible windows
-		subWindows = self.mdiAreaMain.visibleSubWindowList()
-		if (len(subWindows) > 1):
-			for subWin in subWindows:
-				if (subWin != widget):
-					subWin.widget().onInactive()
-				# end if
-				
-				#subWin.widget().getMenuButton().setChecked(True)
-			# end for
-		# end if
-	# end __onModuleActivated
-	
-	## @brief if a menu button was double clicked
-	# @param module: module pointer which module have to be displayed
-	# show only one module in full screen
-	@pyqtSlot(QWidget)
-	def __onModuleShowMaximized(self, module):
-		mdiWindow = module.parent()
-		
-		# set new module as current module
-		self.__p_currentModule = module
-
-		# maximize module
-		mdiWindow.showMaximized()
-	# end __onModuleShowMaximized
-	
-	## @brief if menu button was double clicked
+	## @brief if menu button was clicked
+	# @param self The object pointer.
 	# @param module: module pointer
 	# visible this module in mdiArea
-	@pyqtSlot(QWidget)
-	def __onModuleShow(self, module):
-		mdiWindow = module.parent()
+	@pyqtSlot(QObject)
+	def __onModuleButtonClicked(self, module):
+		modParent = module.parent()
 		
-		if (mdiWindow.metaObject().className() != "QMdiSubWindow"):
-			module.setParent(None)
-			mdiWindow = self.mdiAreaMain.addSubWindow(module)
-			module.setVisible(True)
-			mdiWindow.setWindowIcon(module.getMenuButton().icon())
-		# end if
+		# show or hide dock widget
+		modParent.setVisible(not modParent.isVisible())
 		
-		# Falls das Module schon sichtbar ist, wird es nur aktiviert.
-		if (mdiWindow.isVisible()):
-			if (not module.getMenuButton().isChecked() and self.mdiAreaMain.activeSubWindow() == mdiWindow):
-				mdiWindow.close()
-			else:
-				module.getMenuButton().setChecked(True)
-				self.mdiAreaMain.setActiveSubWindow(mdiWindow)
-			# end if
-		else:
-			#self.mdiAreaMain.cascadeSubWindows()
-			mdiWindow.setVisible(True)
-		# end if
+		# set menu button checked or none checked
+		module.getMenuButton().setChecked(modParent.isVisible())
 		
-		self.__p_currentModule = module
-	# end __onModuleShow
+		#self.__p_currentModule = module
+	# end __onModuleButtonClicked
 	
-	"""
-	## @brief slot for dropModule signal from mdiArea
-	# @param name: string name of module
-	@pyqtSlot(str)
-	def __onDropModuleInMdiArea(self, name):
-		mod = abstractModuleClass.getModuleByName(name)
-
-		mod['handle'].parent().setVisible(True)
-		#self.mdiAreaMain.setActiveSubWindow(mod['handle'].parent())
-		#self.mdiAreaMain.tileSubWindows()
-		self.mdiAreaMain.cascadeSubWindows()
-	# end __onDropModuleInMdiArea
-	"""
-
+	# --- module slots end ---
 	
-	## @brief get user settings like used module list and gui position
-	# @param self The object pointer.
-	# 
-	# Load only the modules which were selected by the user.
-	def __loadSettings(self):
-		# main group
-		self.__p_settingsHandle.beginGroup('main')
-		displayName = self.__p_settingsHandle.value("displayName", "pyGUI")
-		geo = self.__p_settingsHandle.value("geo")
-		state = self.__p_settingsHandle.value('state')
-		self.__p_settingsHandle.endGroup()
-		
-		saveOnExit = self.__p_settingsHandle.value("settings/saveOnExit", True)
-		
-		# modules group
-		self.__p_settingsHandle.beginGroup('module')
-		self.__l_usedModules = self.__p_settingsHandle.value('used', [])
-		self.__v_lastModule = self.__p_settingsHandle.value('last', '')
-		self.__p_settingsHandle.endGroup()
-
-		# restore state and geometry if information ist available
-		if (state):
-			self.restoreState(state)
-		# end if
-		if (geo):
-			self.restoreGeometry(geo)
-		# end if
-
-		# if no used moduels ar available		
-		if (self.__l_usedModules == None):
-			self.__l_usedModules = []
-		# end if
-		
-		# set last used module
-		if (self.__v_lastModule == None):
-			self.__v_lastModule = ''
-		# end if
-
-		# restore settings
-		self.actionSaveSettingsOnExit.setChecked(str2bool(saveOnExit))
-		
-		# set display name
-		self.setWindowTitle(displayName)
-	# end __loadSettings
-
+	# --- module handler end ---
 	
-	## @brief save window and user settings
+	
+	# --- gui slots begin ---
+	
+	
+	## @brief Qt slot to move dock widget to bottom dock widget area.
 	# @param self The object pointer.
-	#
-	# saved settings are:
-	# - main window position and size
-	# - current active module
-	def __saveSettings(self):
-		# modules
-		self.__l_usedModules = list()
-		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
-			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
-
-			for c in range(item.childCount()):
-				child = item.child(c)
-
-				if (child.checkState(0) == Qt.Checked):
-					self.__l_usedModules.append(child.text(0))
-				# end if
-			# end for
-		# end for
-		
-		# current module
-		if (self.__p_currentModule != None):
-			lastMod = self.__p_currentModule.getName()
-		else:
-			lastMod = ''
-		# end if
-		
-		
-		# main window settings
-		self.__p_settingsHandle.setValue("main/geo", self.saveGeometry())
-		self.__p_settingsHandle.setValue("main/state", self.saveState())
-		self.__p_settingsHandle.setValue("main/displayName", self.windowTitle().split()[0])
-		
-		# used moduel setttings
-		self.__p_settingsHandle.setValue("module/used", self.__l_usedModules)
-		self.__p_settingsHandle.setValue("module/last", lastMod)
-		
-		# settings
-		self.__p_settingsHandle.setValue("settings/saveOnExit", self.actionSaveSettingsOnExit.isChecked())
-	# end __saveSettings
-
-
-	## @brief private slot for main bar: settings -> load
+	@pyqtSlot()
+	def onMoveLoggerToBottom(self):
+		self.removeDockWidget(self.__p_loggerDockWidget)
+		self.addDockWidget(Qt.BottomDockWidgetArea, self.__p_loggerDockWidget)
+		self.__p_loggerDockWidget.show()
+	# end onMoveLoggerToBottom
+	
+	
+	## @brief show on help dialog
 	# @param self The object pointer.
-	def __onSettingsLoad(self):
-		# Use open settings widget if it's opend.
-		if (self.__p_openSetttingWidget):
-			self.__p_openSetttingWidget.loadSettings()
+	@pyqtSlot()
+	def __onHelp(self):
+		path = os.path.abspath(os.curdir) + "/doc/index.chm"
+		QProcess.startDetached("hh.exe " + path)
+	# end __onHelp
+	
+	## @brief private slot for menu bar: settings -> load default
+	# @param self The object pointer.
+	@pyqtSlot()
+	def __onSettingsDefault(self):
+		currentDockWidget = mainWindowDockWidget.getCurrentWidget()
+		if (currentDockWidget == None):
 			return
 		# end if
+		currentModule = currentDockWidget.widget()
 		
-		# If no settings widget is open check if current module is no hidde module. It's only a safty function.
-		if (self.__p_currentModule != None and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.loadSettings()
+		currentModule.loadDefaultSettings()
+		self.__p_logger.debug('Load default settings for %s.', currentModule.windowTitle())
+	# end __onSettingsDefault
+	
+	## @brief private slot for main bar: settings -> load
+	# @param self The object pointer.
+	@pyqtSlot()
+	def __onSettingsLoad(self):
+		currentDockWidget = mainWindowDockWidget.getCurrentWidget()
+		if (currentDockWidget == None):
+			return
 		# end if
+		currentModule = currentDockWidget.widget()
+		
+		currentModule.loadSettings()
+		self.__p_logger.debug('Load settings for %s.', currentModule.windowTitle())
 	# end __onSettingsLoad
 	
 	## @brief private slot for menu bar: settings -> save
 	# @param self The object pointer.
+	@pyqtSlot()
 	def __onSettingsSave(self):
-		if (self.__p_openSetttingWidget):
-			self.__p_openSetttingWidget.saveSettings()
+		currentDockWidget = mainWindowDockWidget.getCurrentWidget()
+		if (currentDockWidget == None):
 			return
 		# end if
+		currentModule = currentDockWidget.widget()
 		
-		if (self.__p_currentModule != None and "getClassType" in dir(self.__p_currentModule) and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.saveSettings()
-		# end if
+		currentModule.saveSettings()
+		self.__p_logger.debug('Save settings for %s.', currentModule.windowTitle())
 	# end __onSettingsSave
 	
 	## @brief debug function: Print settings from current active module
 	# @param self The object pointer.
 	@pyqtSlot()
 	def __onPrintSettings(self):
-		if (self.__p_openSetttingWidget):
-			print(self.__p_openSetttingWidget.getSettings())
+		currentDockWidget = mainWindowDockWidget.getCurrentWidget()
+		if (currentDockWidget == None):
 			return
 		# end if
+		currentModule = currentDockWidget.widget()
 		
-		if (self.__p_currentModule):
-			print(self.__p_currentModule.getSettings())
+		print(currentModule.windowTitle())
+		print(currentModule.getSettings())
 		# end if
 	# end __onPrintSettings
 	
@@ -873,6 +802,7 @@ class mainWindow(QMainWindow):
 
 	## @brief private slot for menu bar: settings -> save all
 	# @param self The object pointer.
+	@pyqtSlot()
 	def __onSettingsSaveAll(self):
 		modules = abstractModuleClass.d_modules
 		
@@ -886,19 +816,13 @@ class mainWindow(QMainWindow):
 			# end if
 		# end for
 	# def __onSettingsSaveAll
-
-	## @brief private slot for menu bar: settings -> load default
-	# @param self The object pointer.
-	def __onSettingsDefault(self):
-		if (self.__p_openSetttingWidget):
-			self.__p_openSetttingWidget.loadDefaultSettings()
-			return
-		# end if
-		
-		if (self.__p_currentModule != None and self.__p_currentModule.getClassType() != "hidden"):
-			self.__p_currentModule.loadDefaultSettings()
-		# end if
-	# end __onSettingsDefault
+	
+	
+	# --- gui slots end ---
+	
+	
+	
+	# --- main tab slots begin ---
 	
 	## @brief private slot for push button select all
 	# @param self The object pointer.
@@ -928,6 +852,38 @@ class mainWindow(QMainWindow):
 			# end for
 		# end for
 	# end __unselectAll
+	
+	@pyqtSlot(QTreeWidgetItem, int)
+	def __onTreeWidgetChanged(self, item, column):
+		modules = abstractModuleClass.d_modules
+		name = item.text(column)
+
+		if (item.checkState(column) == Qt.Checked):
+			if (self.__checkForDependencies(name)):
+				if (name not in self.__l_usedModules):
+					self.__l_usedModules.append(name)
+				# end if
+			else:
+				item.setCheckState(column, Qt.Unchecked)
+			# end if
+		else:
+			if (name in self.__l_usedModules):
+				# if another module depend this module ?
+				for modName in modules:
+					if (modName in self.__l_usedModules and name in modules[modName]["dependencies"]):
+						self.__l_usedModules.remove(modName)
+						item = self.__treeWidgetChild(modName)
+						item.setCheckState(column, Qt.Unchecked)
+					# end if
+				# end for
+				
+				self.__l_usedModules.remove(name)
+			# end if
+		# end if
+	# end __onTreeWidgetChanged
+	
+	# --- main tab slots end ---
+	
 	
 	def __treeWidgetChild(self, childName, treeWidget = False):
 		if (treeWidget == False):
@@ -965,37 +921,66 @@ class mainWindow(QMainWindow):
 		
 		return True
 	# end __checkForDependencies
+
+
+
+	# ---- private end ----
 	
-	@pyqtSlot(QTreeWidgetItem, int)
-	def __onTreeWidgetChanged(self, item, column):
-		modules = abstractModuleClass.d_modules
-		name = item.text(column)
+	
+	
+	## @brief init function
+	# @param self The object pointer.
+	# @param availGeo available geometry as QRect
+	# 
+	# This init function load the modules an initialize the main gui. 
+	def init(self, availGeo):
+		self.__p_logger.debug("available geometry " + str(availGeo))
+		self.__p_logger.debug("try load main window settings")
+		
+		self.setDockNestingEnabled(True)
+		
+		# load settings
+		self.__loadSettings()
 
-		if (item.checkState(column) == Qt.Checked):
-			if (self.__checkForDependencies(name)):
-				if (name not in self.__l_usedModules):
-					self.__l_usedModules.append(name)
-				# end if
-			else:
-				item.setCheckState(column, Qt.Unchecked)
-			# end if
-		else:
-			if (name in self.__l_usedModules):
-				# if another module depend this module ?
-				for modName in modules:
-					if (modName in self.__l_usedModules and name in modules[modName]["dependencies"]):
-						self.__l_usedModules.remove(modName)
-						item = self.__treeWidgetChild(modName)
-						item.setCheckState(column, Qt.Unchecked)
-					# end if
-				# end for
-				
-				self.__l_usedModules.remove(name)
-			# end if
+		# load modules
+		self.__p_logger.debug("try load modules...")
+		self.__loadModules()
+		self.__p_logger.debug("load modules finished")
+
+		# load state after modules		
+		state = self.__p_settingsHandle.value('main/state')
+		if (state):
+			self.restoreState(state)
 		# end if
-	# end __onTreeWidgetChanged
+		
+	
+		# expend all trees in module dialog
+		for i in range(self.__p_selectModule.treeWidgetModules.topLevelItemCount()):
+			item = self.__p_selectModule.treeWidgetModules.topLevelItem(i)
+			item.setExpanded(True)
+		# end for
 
-	# ---------- Private ----------
+		# connect signals from settings menue
+		self.actionSettingsLoad.triggered.connect(self.__onSettingsLoad)
+		self.actionSettingsDefault.triggered.connect(self.__onSettingsDefault)
+		self.actionSettingsSave.triggered.connect(self.__onSettingsSave)
+		self.actionSettingsSaveAll.triggered.connect(self.__onSettingsSaveAll)
+		
+		# connect signals from main tab
+		self.__p_selectModule.pushButtonSelectAll.clicked.connect(self.__selectAll)
+		self.__p_selectModule.pushButtonUnselectAll.clicked.connect(self.__unselectAll)
+		self.__p_selectModule.treeWidgetModules.itemChanged[QTreeWidgetItem, int].connect(self.__onTreeWidgetChanged)
+		
+		# check for window height
+		# if available desktop height smaler than main window height, then move the logger dock widget to the left site
+		if (availGeo.height() < self.height()):
+			self.dockWidgetLogger.setDockWidgetArea(Qt.LeftDockWidgetArea)
+		# end if
+		
+		# scroll log window
+		self.__p_loggerListWidget.scrollToBottom()
+	# end init
+
 
 	## @brief main windows close event
 	# @param self The object pointer.
@@ -1073,4 +1058,90 @@ class mainWindow(QMainWindow):
 	# end getOutptuWidget
 
 #end class mainWindow
+
+
+## @brief dock widget class for main window dock widgets
+class mainWindowDockWidget(QDockWidget):
+	__l_widgets = list()
+	__p_currentWidget = None
+	
+	def __init__(self, *args, **kwargs):
+		QDockWidget.__init__(self, *args, **kwargs)
+		
+		# add this object to static list
+		mainWindowDockWidget.__l_widgets.append(self)
+	# end __init__
+	
+	def __del__(self):
+		# move this object from static list
+		mainWindowDockWidget.__l_widgets.pop(self)
+		
+		if (mainWindowDockWidget.__l_widgets == []):
+			mainWindowDockWidget.__p_currentWidget = None
+		# end if
+	# end __del__
+	
+	# --- static methods begin ---
+	
+	@staticmethod
+	def resetState():
+		for dockWidget in mainWindowDockWidget.__l_widgets:
+			dockWidget.setStyleSheet("")
+		# end for
+	# end if
+	
+	@staticmethod
+	def getCurrentWidget():
+		return mainWindowDockWidget.__p_currentWidget
+	# end getCurrentWidget
+	
+	@staticmethod
+	def setAsCurrent(dockWidget):
+		# Do nothing if module already current active module.
+		if (mainWindowDockWidget.__p_currentWidget == dockWidget):
+			return False
+		# end if
+		
+		# reset all modules
+		mainWindowDockWidget.resetState()
+		
+		# set current dock widget as active module
+		mainWindowDockWidget.__p_currentWidget = dockWidget
+		
+		# get GUI module and call onActive function
+		dockWidget.widget().onActive()
+		
+		#frame = QFrame()
+		dockWidget.setStyleSheet("QDockWidget::title { background-color: rgb(148, 148, 148); border: 1px solid grey; margin: 1px 1px 2px 1px; padding: 2px 1px 1px 0px; }")
+		#dockWidget.setStyleSheet("::title { font: bold; }")
+		#dockWidget.setTitleBarWidget(frame)
+		
+		return True
+	# end setAsCurrent
+	
+	# --- static methods end ---
+	
+	def setVisible(self, visible):
+		QDockWidget.setVisible(self, visible)
+		
+		if (visible):
+			# set as current widget
+			mainWindowDockWidget.setAsCurrent(self)
+			
+			# If dock widget is tabbed, then show on top.
+			otherTabbedWidgets = self.parent().tabifiedDockWidgets(self)
+			
+			if (otherTabbedWidgets != []):
+				self.raise_()
+			# end if
+		# end if
+	# end setVisible
+	
+	def mousePressEvent(self, event):
+		mainWindowDockWidget.setAsCurrent(self)
+		
+		return QDockWidget.mousePressEvent(self, event)
+	# end focusInEvent
+	
+# end class mainWindowDockWidget
 

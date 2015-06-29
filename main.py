@@ -18,8 +18,8 @@
 # @mainpage pyGUI
 # These project is a universal python3 GUI. You can add your own modules and use some global functions for your project.
 #  
-# @section Modules
-# @subsection Allgemein
+# @section modules Module
+# @subsection main Allgemein
 # Es gibt eine abstrakte Oberklasse(abstractModuleClass) von dieser alle Module abgeleitet werden.
 # Drei verschiedene Modulklassen sind moeglich:
 # - hidden
@@ -43,6 +43,7 @@
 # - class module(applicationModuleClass):
 # - class module(hiddenModuleClass):
 # 
+# @subsection settings Einstellungen laden und speichern
 # Fuer die Module "settings" und "application" koennen Werte verschiedener Qt Elemente automatisch gespeichert werden.
 # Dazu fragt de rModulhandler die Funktion "getDefaultSettings" in jedem Modul ab.
 # Falls die Funktion nicht vorhanden ist, wird davon ausgegangen, dass keine Einstellungen gespeichert werden sollen.
@@ -76,9 +77,8 @@
 #  "X" = {"qName": "spinBoxX", "value": 2, "minVal": 0, "maxVal": 10, "step": 1},
 #  "Y" = {"qName": "doubleSpinBoxY", "value": 1.0, "minVal": 0.0, "maxVal": 10.0, "step": 0.1},
 #}</pre>
-# - betterSlider
-# @n vohanden sein muessen; "qName", "value", "type", "maxVal" und "minVal"
-# @n "type": integer, double, logarithm
+# - customIntegerSlider, customFloatSlider, customLogarithmSlider
+# @n vohanden sein muessen; "qName", "value", "maxVal" und "minVal"
 # @n optiional sind: "step" (default: 1), "pageStep" (default 10), "connectedLabels", "connectedLineEdits"
 # <pre>{
 #  "X": {"qName": "horizontalSliderX", "type": "double", "value": 10, "minVal": 0, "maxVal": 100, "step": 0.1, "pageStep": 20, "connectedLabels": ["labelTestSl"], "connectedLineEdits": ["lineEditTextSl"]},
@@ -109,6 +109,8 @@
 # class module(applicationModuleClass):
 #   def __init__(self, parent, name):
 #     applicationModuleClass.__init__(self, parent, name)
+#
+#     self.setDisplayName('Modulname')
 #   # end __init__
 # </pre>
 # 

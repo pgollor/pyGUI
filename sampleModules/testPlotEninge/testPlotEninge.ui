@@ -6,91 +6,83 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>780</width>
-    <height>510</height>
+    <width>220</width>
+    <height>220</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="pushButtonPlotCurve">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>20</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>plot curve</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButtonReplotCurve">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>replot curve</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButtonCloseAllPlots">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>240</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>close all plots</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButtonPlotImage">
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>20</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>plot image</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButtonSimplePlot">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>160</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>simple plot</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButtonDeleteAllPlots">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>240</y>
-     <width>98</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>delete all plots</string>
-   </property>
-  </widget>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="3">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="pushButtonCloseAllPlots">
+     <property name="text">
+      <string>close all plots</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="pushButtonReplotCurve">
+     <property name="text">
+      <string>replot curve</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0">
+    <widget class="QPushButton" name="pushButtonPlotCurve">
+     <property name="text">
+      <string>plot curve</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QPushButton" name="pushButtonSimplePlot">
+     <property name="text">
+      <string>simple plot</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="pushButtonPlotImage">
+     <property name="text">
+      <string>plot image</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="pushButtonDeleteAllPlots">
+     <property name="text">
+      <string>delete all plots</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

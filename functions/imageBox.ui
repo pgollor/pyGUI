@@ -63,16 +63,6 @@
        </item>
       </layout>
      </item>
-     <item row="1" column="2">
-      <widget class="betterSlider" name="sliderWidth">
-       <property name="singleStep">
-        <number>2</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="0">
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
@@ -124,7 +114,13 @@
       </layout>
      </item>
      <item row="2" column="1">
-      <widget class="betterSlider" name="sliderYPos">
+      <widget class="customIntegerSlider" name="sliderYPos">
+       <property name="maximumSize">
+        <size>
+         <width>19</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="singleStep">
         <number>2</number>
        </property>
@@ -137,7 +133,13 @@
       </widget>
      </item>
      <item row="2" column="3">
-      <widget class="betterSlider" name="sliderHeight">
+      <widget class="customIntegerSlider" name="sliderHeight">
+       <property name="maximumSize">
+        <size>
+         <width>19</width>
+         <height>16777215</height>
+        </size>
+       </property>
        <property name="singleStep">
         <number>2</number>
        </property>
@@ -200,7 +202,13 @@
       </layout>
      </item>
      <item row="3" column="2">
-      <widget class="betterSlider" name="sliderXPos">
+      <widget class="customIntegerSlider" name="sliderXPos">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>19</height>
+        </size>
+       </property>
        <property name="singleStep">
         <number>2</number>
        </property>
@@ -256,15 +264,31 @@
        </item>
       </layout>
      </item>
+     <item row="1" column="2">
+      <widget class="customIntegerSlider" name="sliderWidth">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>19</height>
+        </size>
+       </property>
+       <property name="singleStep">
+        <number>2</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>betterSlider</class>
+   <class>customIntegerSlider</class>
    <extends>QSlider</extends>
-   <header>functions/betterSlider.h</header>
+   <header>customGuiElements.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
