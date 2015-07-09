@@ -27,7 +27,7 @@ class module(applicationModuleClass):
 	def __init__(self, parent, name):
 		applicationModuleClass.__init__(self, parent, name)
 		
-		self.setDisplayName("testCustomGuiElements")
+		self.setDisplayName("Custom GUI Elements")
 	# end __init__
 	
 	## @brief Qt slot which is connected to pushButton.

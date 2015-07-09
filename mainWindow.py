@@ -542,24 +542,27 @@ class mainWindow(QMainWindow):
 						icon = QIcon(iconPath)
 					# end if
 					
+					displayName = moduleHand.getDisplayName()
+					
 					# init menu button
 					button = moduleHand.getMenuButton()
-					button.setText(moduleHand.getDisplayName())
+					button.setText(displayName)
 					
 					# dock widget for current module
 					# ... create
-					dockWidget = mainWindowDockWidget(moduleName, self)
+					dockWidget = mainWindowDockWidget(displayName, self)
 					
 					# ... set object name and title
-					dockWidget.setObjectName(moduleName)
-					dockWidget.setWindowTitle(moduleName)
+					dockWidget.setObjectName(displayName)
+					dockWidget.setWindowTitle(displayName)
 					
-					# ... add module
+					# ... add module as widget
 					dockWidget.setWidget(moduleHand)
 					
-					# ... add to main window
+					# ... add dock widget to main window
 					self.addDockWidget(Qt.LeftDockWidgetArea, dockWidget)
 					
+					# ... hide dock widget
 					dockWidget.setVisible(False)
 					
 					# tabify all dock widgets
@@ -569,8 +572,7 @@ class mainWindow(QMainWindow):
 						self.tabifyDockWidget(firstDockWidget, dockWidget)
 					# end if
 					
-					# ... Set window title and icon.
-					dockWidget.setWindowTitle(moduleName)
+					# ... Set window icon.
 					dockWidget.setWindowIcon(moduleHand.getMenuButton().icon())
 					
 					# ... Connect signal for checking and unchecking menu button on visibility change.
