@@ -137,12 +137,13 @@ from functions.guiLogger import QtLogger
 
 # add dlls folder to environment
 dll_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dlls")
+openblas_path = os.path.dirname(sys.executable) + "\\..\\tools\\mingw32\\bin"
+user_dlls = os.pathsep.join((dll_path, openblas_path))
 global_path = os.environ.get('PATH', '')
+
 if dll_path not in global_path:
-	os.environ['PATH'] = os.pathsep.join((dll_path, global_path))
+	os.environ['PATH'] = os.pathsep.join((user_dlls, global_path))
 # end if
-
-
 
 
 def parser():

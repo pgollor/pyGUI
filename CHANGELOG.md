@@ -1,4 +1,9 @@
-# Changes
+Changes
+=======
+
+## 2015-07-09
+* fix bug with logarithm slider signals
+* add warning for smal screens
 
 ## 2015-06-29
 * use dock widgets insteat of mdiArea

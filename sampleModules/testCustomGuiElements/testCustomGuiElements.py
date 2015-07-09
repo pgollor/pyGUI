@@ -128,8 +128,8 @@ class module(applicationModuleClass):
 		self.horizontalSliderInteger.sigChanged[int].connect(self.__onSliderChange)
 		self.horizontalSliderFloat.sigChanged[float].connect(self.__onFloatSliderChange)
 		self.horizontalSliderFloat.sigChanged[float].connect(self.__onSliderChange)
-		self.horizontalSliderLogarithm.sigChanged[int].connect(self.__onLogarithmSliderChange)
-		self.horizontalSliderLogarithm.sigChanged[int].connect(self.__onSliderChange)
+		self.horizontalSliderLogarithm.sigChanged[float].connect(self.__onLogarithmSliderChange)
+		self.horizontalSliderLogarithm.sigChanged[float].connect(self.__onSliderChange)
 		
 		applicationModuleClass.initGUI(self)
 	# end _initGUI

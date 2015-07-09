@@ -914,7 +914,7 @@ class customFloatSlider(CustomAbstractSlider):
 
 ## custom logarithm slider 
 class customLogarithmSlider(CustomAbstractSlider):
-	sigChanged = pyqtSignal(int)
+	sigChanged = pyqtSignal(float)
 	
 	## initial class function
 	# @param self The object pointer.
@@ -926,7 +926,7 @@ class customLogarithmSlider(CustomAbstractSlider):
 	
 	def _emitChange(self):
 		value = self.value()
-		self.sigChanged[int].emit(value)
+		self.sigChanged[float].emit(value)
 	# end _emitChange
 
 	# -------------------- #

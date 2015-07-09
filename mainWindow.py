@@ -18,7 +18,6 @@
 
 
 import os, sys, logging
-from PyQt4.Qt import QFrame
 
 # add sub directories to path
 curPath = os.path.abspath(os.curdir)
@@ -30,7 +29,7 @@ from functools import partial
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, pyqtSlot, QSettings, QProcess, QObject
 from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QStatusBar, QTabWidget, QDockWidget,\
-	QLabel, QStyleOptionDockWidget, QStyleOptionDockWidgetV2
+	QLabel
 import imp, re
 from functions.helper import str2bool
 from functions.delete import delete
@@ -974,7 +973,7 @@ class mainWindow(QMainWindow):
 		# check for window height
 		# if available desktop height smaler than main window height, then move the logger dock widget to the left site
 		if (availGeo.height() < self.height()):
-			self.dockWidgetLogger.setDockWidgetArea(Qt.LeftDockWidgetArea)
+			self.__p_logger.warn('Main Window was to height.')
 		# end if
 		
 		# scroll log window
