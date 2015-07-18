@@ -17,6 +17,14 @@
 # 
 # @mainpage pyGUI
 # These project is a universal python3 GUI. You can add your own modules and use some global functions for your project.
+#
+# @section usage Usage
+# @subsection params Parameters
+# - `-d`: Enable debug mode
+# - `-l`: Set logging level.
+#
+# @subsection logo Logo
+# Copy your logo as svg file into the root folder an rename it to 'user_logo.svg'. 
 #  
 # @section modules Module
 # @subsection main Allgemein
@@ -130,10 +138,16 @@
 # 
 
 
-import sys, os, logging, optparse
-from PyQt4 import QtGui
+import sys, os, glob, logging, optparse, ctypes
+from PyQt4 import QtGui, QtCore
 from mainWindow import mainWindow
 from functions.guiLogger import QtLogger
+
+# this workaround is neccesary for displaying icon in Windows 7 taskbar
+if (sys.platform.startswith('win')):
+	appid = u'messtechnik.pyGui' 
+	ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appid)
+# end if
 
 # add dlls folder to environment
 dll_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "dlls")
@@ -192,6 +206,17 @@ if __name__ == '__main__':
 
 	# create Qt application
 	app = QtGui.QApplication(sys.argv)
+	
+	# Set logo if is available.
+	if ('user_logo.svg' in glob.glob("*.svg")):
+		icon = QtGui.QIcon()
+		icon.addFile('user_logo.svg',QtCore.QSize(16,16))
+		icon.addFile('user_logo.svg',QtCore.QSize(24,24))
+		icon.addFile('user_logo.svg',QtCore.QSize(32,32))
+		icon.addFile('user_logo.svg',QtCore.QSize(48,48))
+		icon.addFile('user_logo.svg',QtCore.QSize(256,256))
+		app.setWindowIcon(icon)
+	# end if
 	
 	if (options.debug == True):
 		w = mainWindow(loglevel = options.loglevel, debug = options.debug)

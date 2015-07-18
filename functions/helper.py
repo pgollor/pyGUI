@@ -172,7 +172,7 @@ class settingsHandler(QObject):
 			
 			if (issubclass(elemClass, QLineEdit)):
 				if (issubclass(elemClass, abstractCustomLineEdit)):
-					elem.validChange.connect(self.__onValidChange)
+					elem.sigValidChange.connect(partial(self.__onValidChange, elemName))
 				else:
 					elem.textChanged[str].connect(partial(self.__onValidChange, elemName))
 				# end if

@@ -25,12 +25,10 @@
 
 import sys, logging
 from PyQt4.QtCore import QSize, pyqtSignal
-from PyQt4.QtGui import QWidget, QLineEdit, QComboBox, QCloseEvent
-#from functions.delete import delete
+from PyQt4.QtGui import QWidget, QCloseEvent
 from functions.menu import applicationMenuButton
 from functions.helper import settingsHandler
-#from functions.plotEngine import newPlot
-# try to import plotengine
+# try to import plot engine
 try:
 	g_plotWindowSupport = True
 	from functions.plotEngine import plotWindow
@@ -473,6 +471,7 @@ class abstractModuleClass(QWidget):
 
 
 class abstractGuiModuleClass(abstractModuleClass):
+	## static settings handle
 	settingsHandle = False
 	
 	def __init__(self, *args, **kwargs):
@@ -664,6 +663,12 @@ class abstractGuiModuleClass(abstractModuleClass):
 	def initGUI(self):
 		"virtual"
 	# end initGUI
+	
+	## @brief virtual function: This function is called if the parent dock widget gets invisible.
+	# @param self The object pointer.
+	def onHide(self):
+		"virtual"
+	# end onHide
 	
 	## @brief qt size hint function
 	# get size hint information for this module if no mimimum size were set

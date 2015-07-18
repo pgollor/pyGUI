@@ -33,7 +33,7 @@
 # - onClose(self)
 # - onActive(self)
 # - onInactive(self)
-# - onInactive(self)
+# - onHide(self)
 # - getDefaultSettings(self)
 #
 # @subsection add-infos Additional information: 

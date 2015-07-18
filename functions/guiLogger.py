@@ -17,10 +17,9 @@
 
 
 import logging
-from PyQt4.QtCore import Qt, pyqtSlot, QSize, QEvent, pyqtSignal
+from PyQt4.QtCore import Qt, pyqtSlot, QEvent, pyqtSignal
 from PyQt4.QtGui import QListWidgetItem, QBrush, QListWidget, QMenu, QApplication,\
 	QCursor, QDockWidget, QSizePolicy
-from functools import partial
 
 
 ## @brief custom python logger

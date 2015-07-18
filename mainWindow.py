@@ -28,8 +28,7 @@ from abstractModuleClass import abstractModuleClass, abstractGuiModuleClass
 from functools import partial
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, pyqtSlot, QSettings, QProcess, QObject
-from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QStatusBar, QTabWidget, QDockWidget,\
-	QLabel
+from PyQt4.QtGui import QMainWindow, QTreeWidgetItem,	QDialog, QIcon, QStatusBar, QTabWidget, QDockWidget
 import imp, re
 from functions.helper import str2bool
 from functions.delete import delete
@@ -64,7 +63,6 @@ class mainWindow(QMainWindow):
 
 		# load main ui before setting debug level
 		uic.loadUi("./main.ui", self)
-
 
 		# create logger widget
 		self.__p_loggerDockWidget = QtLoggerDockWidget('Logging', self)
@@ -675,6 +673,8 @@ class mainWindow(QMainWindow):
 			
 			#self.__p_currentModule = module
 			#self.__p_currentModule.onActive()
+		else:
+			module.onHide()
 		# end if
 	# end __onModuleVisibilityChanged
 	
@@ -1105,6 +1105,11 @@ class mainWindowDockWidget(QDockWidget):
 		
 		# reset all modules
 		mainWindowDockWidget.resetState()
+		
+		# mark last module as inactive
+		if (mainWindowDockWidget.__p_currentWidget and mainWindowDockWidget.__p_currentWidget.widget()):
+			mainWindowDockWidget.__p_currentWidget.widget().onInactive()
+		# end if
 		
 		# set current dock widget as active module
 		mainWindowDockWidget.__p_currentWidget = dockWidget

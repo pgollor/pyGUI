@@ -42,8 +42,6 @@ class abstractCustomLineEdit(QLineEdit):
 	FLOAT = 1
 	LIST = 2
 	
-	# signals
-	
 	def __init__(self, *args, **kwargs):
 		QLineEdit.__init__(self, *args, **kwargs)
 		
@@ -69,24 +67,16 @@ class abstractCustomLineEdit(QLineEdit):
 		
 		return QLineEdit.setText(self, str(value))
 	# end setText
-		
-	def getClassName(self):
-		objName = self.objectName()
-		name= objName[8:len(objName)]
-		return name
-	# end getClassName
 	
 	def _change(self, value):
 		if (str(value) != self.__v_lastValue):
-			#self.emit(SIGNAL('validChange(PyQt_PyObject, PyQt_PyObject)'), self.getClassName(), value)
 			
-			#self.__sig_validChange.emit(self.getClassName(), value)
 			if (self.__v_type == 0):
-				self.validChange[str, int].emit(self.getClassName(), value)
+				self.sigValidChange[int].emit(value)
 			elif (self.__v_type == 1):
-				self.validChange[str, float].emit(self.getClassName(), value)
+				self.sigValidChange[float].emit(value)
 			else:
-				self.validChange[str, str].emit(self.getClassName(), value)
+				self.sigValidChange[str].emit(value)
 			# end if
 			
 			self.__clearMessage()
@@ -133,7 +123,7 @@ class abstractCustomLineEdit(QLineEdit):
 
 
 class customStringLineEdit(abstractCustomLineEdit):
-	validChange = pyqtSignal(str, str)
+	sigValidChange = pyqtSignal(str)
 	
 	def __init__(self, *args, **kwargs):
 		abstractCustomLineEdit.__init__(self, *args, **kwargs)
@@ -210,7 +200,7 @@ class abstractCustomMinMaxLineEdit(abstractCustomLineEdit):
 
 
 class customIntegerLineEdit(abstractCustomMinMaxLineEdit):
-	validChange = pyqtSignal(str, int)
+	sigValidChange = pyqtSignal(int)
 	
 	def __init__(self, *args, **kwargs):
 		abstractCustomMinMaxLineEdit.__init__(self, *args, **kwargs)
@@ -302,7 +292,7 @@ class customIntegerLineEdit(abstractCustomMinMaxLineEdit):
 # end class customIntegerLineEdit
 
 class customFloatLineEdit(abstractCustomMinMaxLineEdit):
-	validChange = pyqtSignal(str, float)
+	sigValidChange = pyqtSignal(float)
 	
 	def __init__(self, *args, **kwargs):
 		abstractCustomMinMaxLineEdit.__init__(self, *args, **kwargs)
@@ -391,7 +381,7 @@ class customFloatLineEdit(abstractCustomMinMaxLineEdit):
 # end class customFloatLineEdit
 
 class customListLineEdit(abstractCustomLineEdit):
-	validChange = pyqtSignal(str, str)
+	sigValidChange = pyqtSignal(str)
 	
 	def __init__(self, *args, **kwargs):
 		abstractCustomLineEdit.__init__(self, *args, **kwargs)
@@ -476,6 +466,9 @@ class abstractCustomComboBox(QComboBox):
 	def itemText(self, *args, **kwargs):
 		return self.convert(QComboBox.itemText(self, *args, **kwargs))
 	# end itemText
+	
+	def findText(self, text, *args, **kwargs):
+		return QComboBox.findText(self, str(text), *args, **kwargs)
 # end class abstractCustomComboBox
 
 
